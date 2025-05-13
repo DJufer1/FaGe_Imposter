@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-TF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imposter: FaGe Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Kahoot-like dark gradient background */
+            background-image: linear-gradient(to br, #4A00E0, #8E2DE2);
+        }
+        .game-title {
+            /* Kahoot often uses a specific, bold, slightly rounded font. Inter is a good sans-serif fallback. */
+            font-weight: 800; /* Extra bold */
+        }
+        .card {
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0.75rem; /* Slightly more rounded like Kahoot cards: rounded-xl */
+        }
+        .card-front {
+            background-color: #00A2FF; /* Kahoot Accent Blue */
+            color: white;
+        }
+        .card-back {
+            background-color: #64748b; /* Tailwind: bg-slate-500 - Neutral color for content */
+            color: white;
+            transform: rotateY(180deg);
+        }
+        .rules-tooltip, .definition-tooltip {
+            min-width: 280px;
+        }
+        .definition-tooltip {
+            bottom: calc(100% + 8px); /* Increased spacing */
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 180px;
+            max-width: 280px; /* Allow wider tooltips */
+            z-index: 30;
+            padding: 0.75rem; /* p-3 */
+            border-radius: 0.5rem; /* rounded-lg */
+        }
+        .fade-in-out {
+            animation: fadeInOut 3s ease-in-out;
+        }
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; transform: translateY(-20px); }
+            10%, 90% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Styling for term text on card to enable hyphenation */
+        .term-text-hyphenate {
+            hyphens: auto;
+            -webkit-hyphens: auto; /* For older WebKit browsers */
+            word-break: break-word; /* Fallback for better text wrapping */
+            text-align: center;
+            line-height: 1.3; /* Adjust line height for multi-line terms */
+        }
+
+        /* Kahoot-like button base style */
+        .kahoot-button {
+            color: white;
+            font-weight: 700; /* bold */
+            padding-top: 0.875rem; /* py-3.5 */
+            padding-bottom: 0.875rem;
+            padding-left: 1.5rem; /* px-6 */
+            padding-right: 1.5rem;
+            border-radius: 0.375rem; /* rounded-md, Kahoot buttons are often less rounded */
+            text-lg: ;
+            transition: all 0.15s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+        }
+        .kahoot-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+        }
+        .kahoot-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5); /* Ring-like effect with white */
+        }
+
+        .kahoot-button-green { background-color: #26890C; /* Darker Green */ }
+        .kahoot-button-green:hover { background-color: #31AF0F; }
+        .kahoot-button-blue { background-color: #1368CE; }
+        .kahoot-button-blue:hover { background-color: #1881FF; }
+        .kahoot-button-yellow { background-color: #D89E00; }
+        .kahoot-button-yellow:hover { background-color: #FFB81C; }
+        .kahoot-button-red { background-color: #C92828; }
+        .kahoot-button-red:hover { background-color: #E53E3E; }
+        .kahoot-button-purple { background-color: #6A1B9A; }
+        .kahoot-button-purple:hover { background-color: #8E2DE2; }
+        .kahoot-button-slate { background-color: #4A5568; } /* For back button */
+        .kahoot-button-slate:hover { background-color: #718096; }
+
+
+        /* Custom select styling to look more Kahoot-like */
+        select.kahoot-select {
+            background-color: white;
+            border: 2px solid #CBD5E0; /* border-slate-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.75rem 1rem; /* p-3 */
+            color: #2D3748; /* text-slate-800 */
+            appearance: none; /* Remove default arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%234A5568'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+        }
+        select.kahoot-select:focus {
+            border-color: #4A00E0; /* Kahoot Purple */
+            box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.3);
+            outline: none;
+        }
+
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="text-slate-800 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div id="game-container" class="bg-white p-8 sm:p-10 md:p-12 rounded-2xl shadow-2xl w-full max-w-xl transition-all duration-500">
+
+        <div id="start-screen">
+            <div class="mx-auto mb-6 h-24 w-24 flex items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 shadow-lg">
+                <span class="text-5xl text-white">🩺</span>
+            </div>
+            <h1 class="game-title text-4xl sm:text-5xl font-extrabold text-center mb-2 text-purple-700">Imposter</h1>
+            <p class="text-center text-slate-500 mb-8 text-2xl font-medium">FaGe Edition</p>
+
+            <div class="mb-4">
+                <label for="semesterSelect" class="block text-sm font-medium text-slate-700 mb-1">Semester auswählen:</label>
+                <select id="semesterSelect" class="kahoot-select w-full text-lg">
+                    </select>
+            </div>
+
+            <div id="hk-select-container" class="mb-6 hidden">
+                <label for="hkSelect" class="block text-sm font-medium text-slate-700 mb-1">Handlungskompetenz auswählen:</label>
+                <select id="hkSelect" class="kahoot-select w-full text-lg">
+                    </select>
+            </div>
+
+            <button id="startGameBtn" class="kahoot-button kahoot-button-green w-full text-xl">Spiel Starten</button>
+        </div>
+
+        <div id="player-setup-screen" class="hidden">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-8 text-center text-purple-700">Spieler einrichten</h2>
+            <div class="mb-6">
+                <label for="playerCount" class="block text-sm font-medium text-slate-700 mb-1">Anzahl Spieler:</label>
+                <select id="playerCount" class="kahoot-select w-full text-lg">
+                    </select>
+            </div>
+            <div id="playerNameInputs" class="mb-6 space-y-4">
+                </div>
+            <div class="flex space-x-3">
+                <button id="backToStartBtn" class="kahoot-button kahoot-button-slate w-1/3 text-lg">Zurück</button>
+                <button id="submitPlayersBtn" class="kahoot-button kahoot-button-green w-2/3 text-lg">Spiel konfigurieren!</button>
+            </div>
+        </div>
+
+        <div id="role-reveal-screen" class="hidden">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-4 text-center text-purple-700">Rollen aufdecken</h2>
+            <p class="text-base text-slate-600 mb-8 text-center">Klicke auf deinen Namen, um deine Rolle zu sehen. Merke sie dir gut und gib das Gerät dann weiter.</p>
+            <div id="playerCardsContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+                </div>
+            <button id="proceedToGameBtn" class="kahoot-button kahoot-button-green w-full text-xl hidden">Alle Rollen gesehen? Spiel starten!</button>
+        </div>
+
+        <div id="game-screen" class="hidden">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-4 text-center text-purple-700">Das Spiel läuft!</h2>
+            <p id="startingPlayerText" class="text-xl text-center font-semibold text-slate-700 mb-8"></p>
+            
+            <div class="rules-container relative group mb-8 text-center">
+                <button class="bg-purple-100 text-purple-700 px-6 py-3 rounded-lg hover:bg-purple-200 text-base font-medium transition duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                    Spielregeln
+                </button>
+                <div class="rules-tooltip absolute hidden group-hover:block bg-slate-800 text-white text-sm rounded-lg p-4 shadow-xl z-20 mt-2 left-1/2 transform -translate-x-1/2 text-left">
+                    <h4 class="font-bold text-base mb-2">Kurzregeln:</h4>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Ein Spieler ist der Imposter (kennt den Begriff nicht).</li>
+                        <li>Die anderen kennen den geheimen Fachbegriff.</li>
+                        <li>Reihum einen Hinweis geben (1 Wort/kurze Phrase).</li>
+                        <li>Begriff NICHT direkt nennen!</li>
+                        <li>Crew gewinnt: Imposter wird entlarvt.</li>
+                        <li>Imposter gewinnt: Begriff wird erraten ODER ein Unschuldiger fälschlich beschuldigt.</li>
+                        <li>Nach jeder Runde: Diskutieren & abstimmen.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <p class="text-slate-600 text-base mb-6 text-center">Viel Spaß beim Diskutieren, Kombinieren und Entlarven!</p>
+            
+            <button id="revealBtn" class="kahoot-button kahoot-button-yellow w-full text-xl mb-4">Auflösen</button>
+            
+            <div id="reveal-info" class="hidden my-6 p-6 bg-indigo-50 rounded-xl shadow text-center">
+                <h3 class="text-2xl font-semibold text-indigo-700 mb-3">Auflösung</h3>
+                <p id="imposterWasText" class="text-xl text-slate-700"></p>
+                <p id="wordWasText" class="text-xl text-slate-700 mt-2"></p>
+            </div>
+
+            <button id="newGameBtn" class="kahoot-button kahoot-button-purple w-full text-xl">Neues Spiel</button>
+        </div>
+
+        <div id="message-box" class="fixed top-6 right-6 bg-red-600 text-white p-4 rounded-lg shadow-xl hidden z-50 max-w-md text-base">
+            <p id="message-text"></p>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const screens = {
+            start: document.getElementById('start-screen'),
+            playerSetup: document.getElementById('player-setup-screen'),
+            roleReveal: document.getElementById('role-reveal-screen'),
+            game: document.getElementById('game-screen'),
+        };
+        const startGameBtn = document.getElementById('startGameBtn');
+        const semesterSelect = document.getElementById('semesterSelect');
+        const hkSelectContainer = document.getElementById('hk-select-container');
+        const hkSelect = document.getElementById('hkSelect');
+        const playerCountSelect = document.getElementById('playerCount');
+        const playerNameInputsContainer = document.getElementById('playerNameInputs');
+        const submitPlayersBtn = document.getElementById('submitPlayersBtn');
+        const backToStartBtn = document.getElementById('backToStartBtn');
+        const playerCardsContainer = document.getElementById('playerCardsContainer');
+        const proceedToGameBtn = document.getElementById('proceedToGameBtn');
+        const startingPlayerText = document.getElementById('startingPlayerText');
+        const newGameBtn = document.getElementById('newGameBtn');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const revealBtn = document.getElementById('revealBtn');
+        const revealInfoDiv = document.getElementById('reveal-info');
+        const imposterWasText = document.getElementById('imposterWasText');
+        const wordWasText = document.getElementById('wordWasText');
+
+        // Game State
+        let players = [];
+        let currentWord = { term: '', definition: '' };
+        let imposterIndex = -1;
+        let rolesRevealedCount = 0;
+        let currentTermsList = [];
+
+        // Begriff-Datenbank nach Semestern und Handlungskompetenzen (HK)
+        // WICHTIG: Dies ist nur eine BEISPIELHAFTE Auswahl. Bitte mit allen Begriffen und Definitionen füllen!
+        const termsBySemester = {
+            "Semester 1": {
+                "HK A1: Umsetzung von Professionalität und Klientenzentrierung - Berufsperson": [
+                    { term: "Instruktion", definition: "Gezielte Anleitung und Unterweisung." },
+                    { term: "Reflexion", definition: "Systematisches Nachdenken über Erfahrungen und Handlungen." },
+                    { term: "Datenschutz", definition: "Schutz personenbezogener Daten vor Missbrauch." },
+                    { term: "Florence Nightingale", definition: "Britische Krankenschwester, Pionierin der modernen Krankenpflege." },
+                    { term: "Henry Dunant", definition: "Schweizer Geschäftsmann, Gründer des Roten Kreuzes." },
+                ],
+                "HK A2: Umsetzung von Professionalität und Klientenzentrierung - Kommunikation": [
+                    { term: "4-Ohren-Modell", definition: "Kommunikationsmodell (Sach-, Selbstoffenbarungs-, Beziehungs-, Appell-Ohr)." },
+                    { term: "Aktives Zuhören", definition: "Aufmerksames Zuhören mit verbalen und nonverbalen Signalen." },
+                    { term: "Paraphrasieren", definition: "Wiedergeben des Gehörten in eigenen Worten zur Verständnissicherung." },
+                ],
+                "HK B1: Pflege und Betreuung - Körperpflege": [
+                    { term: "Hautturgor", definition: "Spannungszustand der Haut, Indikator für Flüssigkeitshaushalt." },
+                    { term: "Intertrigoprophylaxe", definition: "Vorbeugung von Hautschäden in Hautfalten (z.B. durch Reibung, Feuchtigkeit)." },
+                    { term: "Diffusion", definition: "Selbstständige Vermischung von Teilchen aufgrund ihrer Eigenbewegung." },
+                    { term: "Professionelle Berührung", definition: "Zielgerichtete, respektvolle Berührung im Pflegekontext." },
+                ],
+                 "HK B2: Pflege und Betreuung - Mobilität": [
+                    { term: "Passiver Bewegungsapparat", definition: "Knochen, Gelenke, Bänder, Knorpel; stützt und ermöglicht Bewegung." },
+                    { term: "Sturzprophylaxe", definition: "Maßnahmen zur Vorbeugung von Stürzen bei gefährdeten Personen." },
+                    { term: "Quergestreifte Muskulatur", definition: "Skelettmuskulatur, willkürlich steuerbar." },
+                ],
+                "HK B5: Pflege und Betreuung - Ernährung": [
+                    { term: "Peristaltik", definition: "Wellenförmige Muskelkontraktion zur Fortbewegung von Nahrung im Verdauungstrakt." },
+                    { term: "Aspirationsprophylaxe", definition: "Maßnahmen zur Vermeidung des Einatmens von Fremdstoffen in die Atemwege." },
+                    { term: "Dehydrationsprophylaxe", definition: "Maßnahmen zur Vorbeugung von Flüssigkeitsmangel." },
+                ],
+                "HK E1: Fördern und Erhalten von Gesundheit und Hygiene - Hygienemassnahmen": [
+                    { term: "Nosokomiale Infektion", definition: "Im Krankenhaus oder einer Pflegeeinrichtung erworbene Infektion." },
+                    { term: "Infektionskette", definition: "Weg eines Erregers vom Wirt zur Infektion eines neuen Wirts (Quelle, Übertragungsweg, Empfänger)." },
+                    { term: "Desinfektion und Sterilisation", definition: "Verfahren zur Keimreduktion bzw. Keimfreiheit." },
+                ],
+                "HK G1: Wahrnehmen hauswirtschaftlicher Aufgaben - Kleidung": [
+                    { term: "Wäschekreislauf", definition: "Prozess von schmutziger zu sauberer Wäsche inkl. Sortieren, Waschen, Trocknen, etc." },
+                    { term: "Textilkunde", definition: "Lehre von den Eigenschaften und der Verarbeitung von Textilien." },
+                ],
+                "HK G2: Wahrnehmen hauswirtschaftlicher Aufgaben - Sauberes Umfeld": [
+                    { term: "Küchenhygiene", definition: "Maßnahmen zur Sauberkeit und Vermeidung von Keimübertragung in der Küche." },
+                    { term: "Ergonomie", definition: "Anpassung der Arbeitsbedingungen an den Menschen zur Gesundheitsförderung." },
+                ],
+                "HK H2: Durchführen administrativer und logistischer Aufgaben - Informations- und Kommunikationstechnologien": [
+                    { term: "E-Health-Strategie", definition: "Einsatz digitaler Technologien zur Unterstützung und Verbesserung des Gesundheitswesens." },
+                    { term: "Cybermobbing", definition: "Belästigung, Bedrohung oder Bloßstellung anderer über digitale Medien." },
+                ],
+                "HK H4: Durchführen administrativer und logistischer Aufgaben - Verbandsmaterial und Medikamente bewirtschaften": [
+                    { term: "First-in-First-out", definition: "Lagerprinzip: Zuerst eingelagerte Ware wird zuerst entnommen, um Verfall zu vermeiden." },
+                    { term: "Betäubungsmittelgesetz", definition: "Gesetzliche Regelung zum Umgang mit Betäubungsmitteln." },
+                ],
+                "HK H5: Durchführen administrativer und logistischer Aufgaben - Apparate und Mobiliar unterhalten": [
+                    { term: "Wartung", definition: "Regelmäßige Überprüfung und Instandhaltung von Geräten und Mobiliar zur Funktionssicherung." },
+                ],
+            },
+            "Semester 2": {
+                "HK A2: Umsetzung von Professionalität und Klientenzentrierung - Kommunikation": [
+                    { term: "Transaktionsanalyse", definition: "Theorie der menschlichen Persönlichkeit und Kommunikation (Ich-Zustände: Eltern-Ich, Erwachsenen-Ich, Kind-Ich)." },
+                ],
+                "HK A3: Umsetzung von Professionalität und Klientenzentrierung - Beobachtungen": [
+                    { term: "Orientierungsstörung", definition: "Beeinträchtigung der Orientierung zu Zeit, Ort, Person oder Situation." },
+                    { term: "Wahrnehmungsstörung", definition: "Veränderte oder gestörte Aufnahme und Verarbeitung von Sinnesreizen." },
+                ],
+                 "HK B1: Pflege und Betreuung - Körperpflege": [
+                    { term: "Psoriasis", definition: "Schuppenflechte, chronisch-entzündliche Hauterkrankung mit starker Schuppung." },
+                    { term: "Glaukom", definition: "Grüner Star, Gruppe von Augenerkrankungen mit Schädigung des Sehnervs, oft durch erhöhten Augeninnendruck." },
+                    { term: "Soor", definition: "Pilzinfektion (meist Candida albicans) der Haut oder Schleimhäute." },
+                ],
+                "HK B2: Pflege und Betreuung - Mobilität": [
+                    { term: "Arthrose", definition: "Degenerative Gelenkerkrankung, Gelenkverschleiß mit Knorpelabbau." },
+                    { term: "Osteoporose", definition: "Knochenschwund, verringerte Knochendichte und -festigkeit, erhöhtes Frakturrisiko." },
+                    { term: "Kontrakturen", definition: "Dauerhafte Verkürzung von Muskeln, Sehnen, Bändern mit Bewegungseinschränkung eines Gelenks." },
+                ],
+                "HK B3: Pflege und Betreuung - Ausscheidung": [
+                    { term: "Urininkontinenz", definition: "Unfreiwilliger Verlust von Urin." },
+                    { term: "Stressinkontinenz", definition: "Urinverlust bei körperlicher Belastung (Husten, Niesen, Heben)." },
+                ],
+                "HK D1: Ausführen von medizinaltechnischen Verrichtungen - Vitalzeichen kontrollieren": [
+                    { term: "Hypertonie", definition: "Bluthochdruck, dauerhaft erhöhter Blutdruck (systolisch >140 mmHg / diastolisch >90 mmHg)." },
+                    { term: "Bradykardie", definition: "Verlangsamter Herzschlag, Pulsfrequenz unter 60 Schlägen pro Minute." },
+                    { term: "Hypoxie", definition: "Sauerstoffmangel im Gewebe." },
+                ],
+                "HK E1: Fördern und erhalten von Gesundheit und Hygiene - Arbeitssicherheit": [
+                     { term: "Ergonomie", definition: "Anpassung der Arbeitsbedingungen und -mittel an den Menschen zur Vermeidung von Belastungen." },
+                     { term: "Psychohygiene", definition: "Maßnahmen zur Erhaltung und Förderung der seelischen Gesundheit." },
+                ],
+                "HK E3: Fördern und erhalten von Gesundheit und Hygiene - Nervensystem, Apoplexie": [
+                    { term: "Apoplexie", definition: "Schlaganfall, plötzliche Durchblutungsstörung im Gehirn mit neurologischen Ausfällen." },
+                    { term: "FAST-Test", definition: "Schnelltest zur Erkennung eines Schlaganfalls (Face, Arms, Speech, Time)." },
+                ],
+                "HK E4: Fördern und erhalten von Gesundheit und Hygiene - Ernährung": [
+                    { term: "Kohlenhydrate", definition: "Makronährstoffe, die dem Körper Energie liefern (z.B. Zucker, Stärke, Ballaststoffe)." },
+                    { term: "Body-Mass-Index (BMI)", definition: "Maßzahl zur Bewertung des Körpergewichts in Relation zur Körpergröße (kg/m²)." },
+                ],
+                "HK F1: Gestalten des Alltags - Alltag gestalten": [
+                    { term: "Partizipation", definition: "Teilhabe und Mitbestimmung von Klienten an Entscheidungen, die sie betreffen." },
+                    { term: "Aktivitäten des täglichen Lebens", definition: "Grundlegende Verrichtungen wie Körperpflege, Essen, Mobilität (ATL)." },
+                ],
+                "HK F2: Gestalten des Alltags - Aufbau und Einhalten der Tagesstruktur": [
+                    { term: "Milieutherapie", definition: "Gestaltung der Umgebung und des sozialen Umfelds zur therapeutischen Unterstützung." },
+                    { term: "Depression", definition: "Psychische Erkrankung mit gedrückter Stimmung, Interessenverlust und Antriebslosigkeit." },
+                ],
+                "HK H1: Durchführen administrativer und logistischer Aufgaben - Ein- und Austritte": [
+                    { term: "Relokationssyndrom", definition: "Stressreaktion bei Verlegung oder Umzug von (meist älteren) Klienten in eine neue Umgebung." },
+                ]
+            },
+            "Semester 3": {
+                "HK A1: Umsetzung von Professionalität und Klientenzentrierung - Planung": [
+                    { term: "Bezugspflege (Primary Nursing)", definition: "Pflegesystem, bei dem eine Pflegeperson kontinuierlich für die gesamte Pflege einer kleinen Patientengruppe zuständig ist." },
+                    { term: "Eisenhower-Prinzip", definition: "Zeitmanagement-Methode zur Priorisierung von Aufgaben nach Wichtigkeit und Dringlichkeit." },
+                ],
+                "HK A2: Umsetzung von Professionalität und Klientenzentrierung - Konflikte": [
+                    { term: "Deeskalation", definition: "Maßnahmen zur Reduzierung von Spannung und Verhinderung der Zuspitzung eines Konflikts." },
+                ],
+                "HK A4: Umsetzung von Professionalität und Klientenzentrierung - Biografie und Religion": [
+                    { term: "Biografiearbeit", definition: "Auseinandersetzung mit der Lebensgeschichte eines Menschen zur individuellen und verständnisvollen Pflege." },
+                    { term: "Generationenarbeit", definition: "Aktivitäten und Ansätze, die den Austausch und das Verständnis zwischen verschiedenen Generationen fördern." },
+                ],
+                "HK B3: Pflege und Betreuung - Ausscheidung": [
+                    { term: "Niereninsuffizienz", definition: "Ungenügende Funktion der Nieren, Abfallstoffe und Flüssigkeit ausreichend auszuscheiden." },
+                    { term: "Obstipationsprophylaxe", definition: "Maßnahmen zur Vorbeugung von Verstopfung (z.B. ballaststoffreiche Ernährung, Bewegung, ausreichend Trinken)." },
+                    { term: "Zystitisprophylaxe", definition: "Maßnahmen zur Vorbeugung von Blasenentzündungen." },
+                ],
+                "HK B4: Pflege und Betreuung - Atmung": [
+                    { term: "Dyspnoe", definition: "Atemnot, subjektiv empfundene Erschwerung der Atmung." },
+                    { term: "Sputum", definition: "Auswurf aus den Atemwegen (Schleim, Sekret)." },
+                ],
+                "HK B6: Pflege und Betreuung - Ruhen und Schlafen": [
+                    { term: "REM-Phase", definition: "Schlafphase mit schnellen Augenbewegungen (Rapid Eye Movement), in der intensiv geträumt wird." },
+                    { term: "Schlafhygiene", definition: "Verhaltensweisen und Gewohnheiten, die einen gesunden und erholsamen Schlaf fördern." },
+                ],
+                "HK D2: Ausführen von medizinaltechnischen Verrichtungen - Venöse und kapilläre Venenpunktion": [
+                    { term: "Antikoagulantien", definition: "Medikamente zur Hemmung der Blutgerinnung (Blutverdünner)." },
+                    { term: "Hämostase", definition: "Prozess der Blutstillung nach einer Verletzung." },
+                ],
+                "HK D3: Ausführen von medizinaltechnischen Verrichtungen - Medikamente richten und verabreichen": [
+                    { term: "6-R-Regel", definition: "Sicherheitsregel bei der Medikamentenverabreichung (Richtig: Patient, Medikament, Dosis, Applikationsform, Zeit, Dokumentation)." },
+                    { term: "Pharmakokinetik", definition: "Lehre davon, was der Körper mit einem Medikament macht (Resorption, Verteilung, Metabolismus, Elimination)." },
+                ],
+                "HK D6: Ausführen von medizinaltechnischen Verrichtungen - s.c. und i.m. Injektionen": [
+                    { term: "Hypoglykämie", definition: "Unterzuckerung, zu niedriger Blutzuckerspiegel." },
+                    { term: "Insulin", definition: "Hormon, das den Blutzuckerspiegel senkt und in der Bauchspeicheldrüse produziert wird." },
+                    { term: "Metabolisches Syndrom", definition: "Kombination verschiedener Risikofaktoren für Herz-Kreislauf-Erkrankungen (z.B. Übergewicht, Bluthochdruck, erhöhter Blutzucker)." },
+                ],
+                "HK E1: Fördern und erhalten von Gesundheit und Hygiene - Immunsystem und Infektionskrankheiten": [
+                    { term: "Antigen", definition: "Substanz, die eine spezifische Immunantwort im Körper auslöst (z.B. Bildung von Antikörpern)." },
+                    { term: "Immunisierung", definition: "Herbeiführung von Unempfänglichkeit gegenüber einem Krankheitserreger (aktiv oder passiv)." },
+                ],
+                "HK E2: Fördern und erhalten von Gesundheit und Hygiene - Isolation": [
+                    { term: "Kontaktisolierung", definition: "Isolationsmaßnahme bei Übertragung von Krankheitserregern durch direkten oder indirekten Kontakt." },
+                    { term: "Salutogenese", definition: "Modell der Gesundheitsentstehung und -erhaltung (Fokus auf Ressourcen und Schutzfaktoren)." },
+                ],
+                "HK E3: Fördern und erhalten von Gesundheit und Hygiene - Morbus Parkinson, Multiple Sklerose": [
+                    { term: "Multiple Sklerose (MS)", definition: "Chronisch-entzündliche Autoimmunerkrankung des zentralen Nervensystems, die die Myelinscheiden schädigt." },
+                    { term: "Morbus Parkinson", definition: "Neurodegenerative Erkrankung mit Dopaminmangel, führt zu Bewegungsstörungen (Tremor, Rigor, Akinese)." },
+                ],
+                "HK F1: Gestalten des Alltags - Alltag gestalten": [
+                     { term: "Rituale", definition: "Regelmäßig wiederkehrende Handlungen mit symbolischer Bedeutung, die Struktur und Sicherheit im Alltag geben können." },
+                ],
+                "HK H3: Durchführen administrativer und logistischer Aufgaben - Transporte": [
+                    { term: "Rotkreuzfahrzeuge", definition: "Fahrzeuge des Roten Kreuzes, die für Krankentransporte und im Rettungsdienst eingesetzt werden." },
+                ]
+            },
+             "Semester 4": {
+                "HK A4: Umsetzung von Professionalität und Klientenzentrierung - Transkulturelle Pflege": [
+                    { term: "Transkulturelle Pflege", definition: "Pflege, die kulturelle Unterschiede, Werte und Bedürfnisse von Klienten berücksichtigt und respektiert." },
+                    { term: "Migration", definition: "Dauerhafter Wechsel des Wohnsitzes über Staatsgrenzen hinweg." },
+                ],
+                "HK A5: Umsetzung von Professionalität und Klientenzentrierung - Qualitätssicherung": [
+                    { term: "Pflegeprozess", definition: "Systematischer Problemlösungsansatz in der Pflege (Informationssammlung, Diagnose, Zielsetzung, Planung, Durchführung, Evaluation)." },
+                    { term: "Fehlermanagement", definition: "Systematischer Umgang mit Fehlern zur Verbesserung der Sicherheit und Qualität." },
+                ],
+                "HK B4: Pflege und Betreuung - Atmung": [
+                    { term: "Pneumonie", definition: "Lungenentzündung, eine Infektion des Lungengewebes." },
+                    { term: "COPD (Chronisch obstruktive Lungenerkrankung)", definition: "Chronische Lungenerkrankung mit Verengung der Atemwege und oft Lungenemphysem." },
+                    { term: "Aerosol", definition: "Feinste Verteilung fester oder flüssiger Stoffe in einem Gas (z.B. zur Inhalation von Medikamenten)." },
+                ],
+                "HK B6: Pflege und Betreuung - Ruhen und Schlafen": [
+                     { term: "Somnolenz", definition: "Abnorme Schläfrigkeit, Benommenheit; der Patient ist leicht weckbar." },
+                     { term: "Hypnotika", definition: "Schlafmittel, Medikamente zur Förderung des Schlafes." },
+                ],
+                "HK C2: Pflege und Betreuung in anspruchsvollen Situationen - Onkologie und Schmerzen": [
+                    { term: "WHO-Stufenplan", definition: "Schema der Weltgesundheitsorganisation zur medikamentösen Schmerztherapie in drei Stufen." },
+                    { term: "Metastasen", definition: "Tochtergeschwülste eines bösartigen Tumors, die sich in anderen Körperregionen ansiedeln." },
+                    { term: "Chemotherapie", definition: "Medikamentöse Behandlung von Krebserkrankungen mit Zytostatika." },
+                ],
+                "HK C3: Pflege und Betreuung in anspruchsvollen Situationen - Krisensituation": [
+                    { term: "Copingstrategien", definition: "Bewältigungsmechanismen und Verhaltensweisen im Umgang mit Stress, Belastungen und Krisen." },
+                    { term: "Suizidalität", definition: "Gefährdung durch Selbsttötungsgedanken, -absichten oder -handlungen." },
+                ],
+                "HK C4: Pflege und Betreuung in anspruchsvollen Situationen - Chronische Krankheiten": [
+                    { term: "Adhärenz", definition: "Einhaltung der gemeinsam von Klient und Fachperson vereinbarten Therapieziele und -maßnahmen." },
+                    { term: "Multimorbidität", definition: "Gleichzeitiges Bestehen mehrerer chronischer Erkrankungen bei einer Person." },
+                ],
+                "HK C5: Pflege und Betreuung in anspruchsvollen Situationen - Verwirrtheitszuständen": [
+                    { term: "Demenz", definition: "Fortschreitender Verlust kognitiver Fähigkeiten (Gedächtnis, Orientierung, Sprache, Denken)." },
+                    { term: "Validation", definition: "Kommunikationsmethode für Menschen mit Demenz, die ihre subjektive Realität und Gefühlswelt anerkennt und bestätigt." },
+                    { term: "Delir", definition: "Akuter Verwirrtheitszustand mit Bewusstseins-, Aufmerksamkeits- und Wahrnehmungsstörungen." },
+                ],
+                "HK D4: Ausführen von medizinaltechnischen Verrichtungen - Infusionen richten für den bestehenden peripher venösem Zugang": [
+                    { term: "Phlebitis", definition: "Venenentzündung, oft als Komplikation bei venösen Zugängen (z.B. Infusionen)." },
+                    { term: "Isotonische Lösung", definition: "Lösung mit dem gleichen osmotischen Druck wie das Blutplasma." },
+                ],
+                "HK D5: Ausführen von medizinaltechnischen Verrichtungen - Sondennahrung": [
+                    { term: "PEG-Sonde (Perkutane endoskopische Gastrostomie)", definition: "Ernährungssonde, die durch die Bauchwand direkt in den Magen gelegt wird." },
+                    { term: "Enteral", definition: "Verabreichung von Nahrung oder Medikamenten über den Magen-Darm-Trakt." },
+                ],
+                "HK D7: Ausführen von medizinaltechnischen Verrichtungen - Wundmanagement": [
+                    { term: "Dekubitus", definition: "Druckgeschwür, eine Schädigung der Haut und des darunterliegenden Gewebes durch langanhaltenden Druck." },
+                    { term: "Nekrose", definition: "Abgestorbenes Gewebe." },
+                    { term: "Exsudat", definition: "Flüssigkeitsaustritt aus Gefäßen bei Entzündungen oder Wunden." },
+                ],
+                "HK E2: Fördern und erhalten von Gesundheit und Hygiene - Impfen, Influenza": [
+                    { term: "Influenza", definition: "Echte Grippe, eine akute, fieberhafte Viruserkrankung der Atemwege." },
+                    { term: "Aktive Impfung", definition: "Impfung mit abgeschwächten oder abgetöteten Erregern (oder deren Teilen) zur Anregung der körpereigenen Immunantwort." },
+                ],
+                "HK E4: Fördern und erhalten von Gesundheit und Hygiene - Ernährung beraten": [
+                    { term: "Body-Mass-Index (BMI)", definition: "Maßzahl zur Bewertung des Körpergewichts in Relation zur Körpergröße (kg/m²)." },
+                    { term: "Lebensmittelpyramide", definition: "Grafische Darstellung von Empfehlungen für eine ausgewogene Ernährung." },
+                ],
+                "HK F3: Gestalten des Alltags - Sexualität": [
+                    { term: "Sexuelle Orientierung", definition: "Emotionale, romantische und/oder sexuelle Anziehung zu anderen Personen (z.B. hetero-, homo-, bisexuell)." },
+                    { term: "Primäre Geschlechtsmerkmale", definition: "Angeborene Geschlechtsorgane (z.B. Penis, Hoden bzw. Vagina, Ovarien)." },
+                ]
+            },
+            "Semester 5": {
+                "HK A5: Umsetzung von Professionalität und Klientenzentrierung - Leitungserfassung": [
+                    { term: "SwissDRG", definition: "Fallpauschalensystem zur Abrechnung von stationären Krankenhausleistungen in der Schweiz." },
+                    { term: "LEP (Leistungserfassung Pflege)", definition: "System zur Erfassung und Dokumentation von Pflegeleistungen." },
+                ],
+                "HK C1: Pflege und Betreuung in anspruchsvollen Situationen - Notfallsituationen": [
+                    { term: "Reanimation", definition: "Wiederbelebungsmaßnahmen bei Herz-Kreislauf-Stillstand (Herzdruckmassage, Beatmung)." },
+                    { term: "Hypovolämischer Schock", definition: "Lebensbedrohlicher Zustand durch massiven Flüssigkeits- oder Blutverlust." },
+                    { term: "Defibrillator", definition: "Gerät zur Behandlung von Herzrhythmusstörungen durch elektrische Impulse." },
+                ],
+                "HK C2: Pflege und Betreuung in anspruchsvollen Situationen - Sterbephasen": [
+                    { term: "Sterbephasen (nach Kübler-Ross)", definition: "Modell zur Beschreibung emotionaler Reaktionen im Sterbeprozess (Leugnen, Zorn, Verhandeln, Depression, Akzeptanz)." },
+                    { term: "Patientenverfügung", definition: "Schriftliche Willenserklärung für medizinische Behandlungen im Falle eigener Entscheidungsunfähigkeit." },
+                ],
+                "HK C3: Pflege und Betreuung in anspruchsvollen Situationen - Abhängigkeit": [
+                    { term: "Entzugssyndrom", definition: "Körperliche und psychische Symptome, die beim Absetzen oder Reduzieren einer suchterzeugenden Substanz auftreten." },
+                    { term: "Substanzgebundene Abhängigkeit", definition: "Sucht nach psychoaktiven Substanzen (z.B. Alkohol, Drogen, Medikamente)." },
+                ],
+                "HK C4: Pflege und Betreuung in anspruchsvollen Situationen - Palliative Situation": [
+                    { term: "Palliative Care", definition: "Umfassende Betreuung zur Verbesserung der Lebensqualität von Patienten und ihren Familien bei unheilbaren, fortschreitenden Krankheiten." },
+                    { term: "Symptommanagement", definition: "Systematische Erfassung und Behandlung belastender Symptome in der Palliative Care." },
+                ],
+                "HK F3: Gestalten des Alltags - Sexuell übertragbare Krankheiten": [
+                    { term: "HI-Viren (HIV)", definition: "Humanes Immundefizienz-Virus, Erreger der Immunschwächekrankheit AIDS." },
+                    { term: "Chlamydien", definition: "Bakterien, die sexuell übertragbare Infektionen im Urogenitalbereich verursachen können." },
+                ]
+            }
+        };
+
+        // Utility Functions
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => screen.classList.add('hidden'));
+            if (screens[screenName]) {
+                screens[screenName].classList.remove('hidden');
+            }
+            if (screenName === 'game') {
+                revealInfoDiv.classList.add('hidden');
+                revealBtn.classList.remove('hidden');
+            }
+        }
+
+        function showMessage(message, duration = 3000) {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+            messageBox.classList.add('fade-in-out');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+                messageBox.classList.remove('fade-in-out');
+            }, duration);
+        }
+
+        function populateSemesterSelect() {
+            semesterSelect.innerHTML = '';
+            const defaultOption = document.createElement('option');
+            defaultOption.value = "Zufall";
+            defaultOption.textContent = "Zufall (Alle Semester)";
+            semesterSelect.appendChild(defaultOption);
+
+            Object.keys(termsBySemester).forEach(semesterKey => {
+                const option = document.createElement('option');
+                option.value = semesterKey;
+                option.textContent = semesterKey;
+                semesterSelect.appendChild(option);
+            });
+            populateHkSelect(semesterSelect.value);
+        }
+
+        function populateHkSelect(selectedSemester) {
+            hkSelect.innerHTML = '';
+            if (selectedSemester === "Zufall" || !termsBySemester[selectedSemester]) {
+                hkSelectContainer.classList.add('hidden');
+                return;
+            }
+
+            hkSelectContainer.classList.remove('hidden');
+
+            const allHkOption = document.createElement('option');
+            allHkOption.value = "Alle_HKs";
+            allHkOption.textContent = "Alle HKs dieses Semesters";
+            hkSelect.appendChild(allHkOption);
+
+            const semesterData = termsBySemester[selectedSemester];
+            Object.keys(semesterData).forEach(hkKey => {
+                const option = document.createElement('option');
+                option.value = hkKey;
+                option.textContent = hkKey;
+                hkSelect.appendChild(option);
+            });
+        }
+
+
+        // Event Listeners
+        semesterSelect.addEventListener('change', (event) => {
+            populateHkSelect(event.target.value);
+        });
+
+        startGameBtn.addEventListener('click', () => {
+            const selectedSemesterValue = semesterSelect.value;
+            const selectedHkValue = hkSelect.value;
+            currentTermsList = [];
+
+            if (selectedSemesterValue === "Zufall") {
+                Object.values(termsBySemester).forEach(semesterHks => {
+                    Object.values(semesterHks).forEach(hkTerms => {
+                        currentTermsList.push(...hkTerms);
+                    });
+                });
+            } else if (termsBySemester[selectedSemesterValue]) {
+                const semesterHks = termsBySemester[selectedSemesterValue];
+                // Check if hkSelectContainer is visible to decide if selectedHkValue is relevant
+                if (!hkSelectContainer.classList.contains('hidden') && selectedHkValue === "Alle_HKs") {
+                     Object.values(semesterHks).forEach(hkTerms => {
+                        currentTermsList.push(...hkTerms);
+                    });
+                } else if (!hkSelectContainer.classList.contains('hidden') && semesterHks[selectedHkValue]) {
+                    currentTermsList = [...semesterHks[selectedHkValue]];
+                } else { // Fallback if HK select is hidden (should mean "Alle_HKs" for that semester)
+                     Object.values(semesterHks).forEach(hkTerms => {
+                        currentTermsList.push(...hkTerms);
+                    });
+                }
+            }
+
+
+            if (currentTermsList.length === 0) {
+                showMessage("Keine Begriffe für die Auswahl gefunden. Bitte die Begriffsliste im Code prüfen oder eine andere Auswahl treffen.");
+                return;
+            }
+
+            showScreen('playerSetup');
+            populatePlayerCountSelect();
+            updatePlayerNameInputs(); 
+        });
+
+        backToStartBtn.addEventListener('click', () => {
+            showScreen('start');
+            hkSelectContainer.classList.add('hidden');
+            hkSelect.innerHTML = '';
+        });
+
+        playerCountSelect.addEventListener('change', updatePlayerNameInputs);
+
+        submitPlayersBtn.addEventListener('click', () => {
+            const numPlayers = parseInt(playerCountSelect.value);
+            const names = [];
+            let allNamesFilled = true;
+            for (let i = 0; i < numPlayers; i++) {
+                const input = document.getElementById(`playerName${i}`);
+                if (input.value.trim() === '') {
+                    allNamesFilled = false;
+                    break;
+                }
+                names.push(input.value.trim());
+            }
+
+            if (!allNamesFilled) {
+                showMessage("Bitte gib allen Spielern einen Namen.");
+                return;
+            }
+            if (new Set(names).size !== names.length) {
+                 showMessage("Spielernamen müssen eindeutig sein.");
+                 return;
+            }
+
+            initializeGame(names);
+            showScreen('roleReveal');
+            displayPlayerCards();
+        });
+
+        proceedToGameBtn.addEventListener('click', () => {
+            showScreen('game');
+            determineStartingPlayer();
+        });
+
+        newGameBtn.addEventListener('click', () => {
+            resetGame();
+            showScreen('start');
+        });
+
+        revealBtn.addEventListener('click', () => {
+            if (players.length > 0 && imposterIndex !== -1 && currentWord.term !== '') {
+                const imposterPlayer = players[imposterIndex];
+                imposterWasText.textContent = `Der Imposter war: ${imposterPlayer.name}`;
+                wordWasText.textContent = `Der gesuchte Begriff war: ${currentWord.term}`;
+                revealInfoDiv.classList.remove('hidden');
+                revealBtn.classList.add('hidden');
+            } else {
+                showMessage("Das Spiel muss zuerst vollständig konfiguriert sein, um aufzulösen.");
+            }
+        });
+
+        // Game Logic Functions
+        function populatePlayerCountSelect() {
+            playerCountSelect.innerHTML = ''; 
+            for (let i = 2; i <= 8; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${i} Spieler`;
+                playerCountSelect.appendChild(option);
+            }
+            playerCountSelect.value = Math.min(8, Math.max(2, players.length > 0 ? players.length : 4)).toString();
+        }
+
+        function updatePlayerNameInputs() {
+            const numPlayers = parseInt(playerCountSelect.value);
+            playerNameInputsContainer.innerHTML = ''; 
+            for (let i = 0; i < numPlayers; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `playerName${i}`;
+                input.placeholder = `Name Spieler ${i + 1}`;
+                // Using a more generic input style, can be customized further if needed
+                input.className = 'w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 text-lg';
+                playerNameInputsContainer.appendChild(input);
+            }
+        }
+
+        function initializeGame(playerNames) {
+            players = [];
+            if (currentTermsList.length === 0) {
+                showMessage("Fehler: Keine Begriffe zum Initialisieren des Spiels vorhanden.");
+                currentWord = { term: "FEHLER", definition: "Keine Begriffe geladen." };
+            } else {
+                 currentWord = currentTermsList[Math.floor(Math.random() * currentTermsList.length)];
+            }
+
+            imposterIndex = Math.floor(Math.random() * playerNames.length);
+            rolesRevealedCount = 0;
+            
+            proceedToGameBtn.classList.add('hidden');
+            revealInfoDiv.classList.add('hidden');
+            revealBtn.classList.remove('hidden');
+
+            playerNames.forEach((name, index) => {
+                players.push({
+                    name: name,
+                    isImposter: index === imposterIndex,
+                    roleRevealed: false
+                });
+            });
+        }
+
+        function displayPlayerCards() {
+            playerCardsContainer.innerHTML = '';
+            players.forEach((player, index) => {
+                const cardContainer = document.createElement('div');
+                cardContainer.className = 'card h-40 sm:h-44'; // Increased height slightly for better text fit
+
+                const cardInner = document.createElement('div');
+                cardInner.className = 'card-inner';
+
+                const cardFront = document.createElement('div');
+                cardFront.className = 'card-front flex flex-col justify-center items-center p-2';
+                cardFront.innerHTML = `<span class="font-semibold text-lg">${player.name}</span><span class="text-xs mt-1">(Klicken zum Aufdecken)</span>`;
+
+                const cardBack = document.createElement('div');
+                cardBack.className = 'card-back p-3 break-words flex flex-col justify-center items-center'; 
+                
+                if (player.isImposter) {
+                    cardBack.innerHTML = `<span class="font-bold text-xl xl:text-2xl">IMPOSTER</span><p class="text-xs mt-1">Du kennst den Begriff nicht!</p>`;
+                } else {
+                    const termContainer = document.createElement('div');
+                    termContainer.className = 'relative group text-center w-full px-1 flex flex-col items-center justify-center h-full';
+
+                    const termText = document.createElement('span');
+                    // Added term-text-hyphenate class here for CSS hyphenation
+                    termText.className = 'font-semibold term-text-hyphenate'; 
+                    termText.textContent = currentWord.term;
+
+                    // Adjust font size based on term length
+                    if (currentWord.term.length > 30) { // Adjusted thresholds
+                        termText.classList.add('text-sm'); // Smallest for very long
+                    } else if (currentWord.term.length > 20) {
+                        termText.classList.add('text-base');
+                    } else if (currentWord.term.length > 12) {
+                        termText.classList.add('text-lg');
+                    } else {
+                        termText.classList.add('text-xl'); // Largest for short
+                    }
+                    termContainer.appendChild(termText);
+
+                    const questionMarkContainer = document.createElement('div');
+                    questionMarkContainer.className = 'mt-1'; // Add some space above the question mark
+
+                    const questionMark = document.createElement('span');
+                    questionMark.className = 'text-sm cursor-help opacity-80 hover:opacity-100';
+                    questionMark.textContent = '❓';
+                    questionMarkContainer.appendChild(questionMark);
+                    
+                    const definitionBox = document.createElement('div');
+                    definitionBox.className = 'definition-tooltip absolute hidden group-hover:block bg-slate-700 text-white text-xs rounded-lg p-3 shadow-xl whitespace-normal text-left';
+                    definitionBox.textContent = currentWord.definition;
+                    questionMarkContainer.appendChild(definitionBox); // Append to its container for positioning
+                    
+                    termContainer.appendChild(questionMarkContainer);
+                    cardBack.appendChild(termContainer);
+
+                    // Crew text is removed from here to give more space to the term
+                    // It can be added back if space allows or design changes
+                }
+                
+                const understoodButton = document.createElement('button');
+                understoodButton.textContent = "Verstanden";
+                // Adjusted button style to be less prominent on the card back
+                understoodButton.className = "absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-white/20 hover:bg-white/40 text-white text-xs font-semibold py-1 px-3 rounded-md";
+                understoodButton.onclick = (e) => {
+                    e.stopPropagation(); 
+                    cardContainer.classList.remove('flipped'); 
+                    cardFront.innerHTML = `<span class="font-semibold text-lg">${player.name}</span><span class="text-sm text-green-200">✔️ Rolle gesehen</span>`;
+                    cardContainer.onclick = null; 
+                    player.roleRevealed = true;
+                    rolesRevealedCount++;
+                    if (rolesRevealedCount === players.length) {
+                        proceedToGameBtn.classList.remove('hidden');
+                    }
+                };
+                cardBack.appendChild(understoodButton);
+
+                cardInner.appendChild(cardFront);
+                cardInner.appendChild(cardBack);
+                cardContainer.appendChild(cardInner);
+
+                cardContainer.addEventListener('click', () => {
+                    if (!cardContainer.classList.contains('flipped') && !player.roleRevealed) {
+                        cardContainer.classList.add('flipped');
+                    }
+                });
+                playerCardsContainer.appendChild(cardContainer);
+            });
+        }
+
+        function determineStartingPlayer() {
+            let crewmates = players.filter(p => !p.isImposter);
+            if (crewmates.length === 0) { 
+                if (players.length > 0) { 
+                     const startingPlayer = players[Math.floor(Math.random() * players.length)];
+                     startingPlayerText.textContent = `${startingPlayer.name} beginnt mit dem ersten Hinweis! (Hinweis: Konnte keinen Crewmate finden)`;
+                } else {
+                    startingPlayerText.textContent = "Fehler: Keine Spieler zum Starten gefunden.";
+                }
+                return;
+            }
+            const startingPlayer = crewmates[Math.floor(Math.random() * crewmates.length)];
+            startingPlayerText.textContent = `${startingPlayer.name} beginnt mit dem ersten Hinweis!`;
+        }
+
+        function resetGame() {
+            players = [];
+            currentWord = { term: '', definition: '' };
+            imposterIndex = -1;
+            rolesRevealedCount = 0;
+            currentTermsList = [];
+            playerNameInputsContainer.innerHTML = '';
+            playerCardsContainer.innerHTML = '';
+            proceedToGameBtn.classList.add('hidden');
+            semesterSelect.value = "Zufall"; 
+            hkSelectContainer.classList.add('hidden');
+            hkSelect.innerHTML = '';
+            
+            revealInfoDiv.classList.add('hidden');
+            revealBtn.classList.remove('hidden');
+            imposterWasText.textContent = ''; 
+            wordWasText.textContent = '';    
+        }
+
+        // Initial Setup
+        populateSemesterSelect();
+        showScreen('start');
+
+    </script>
+</body>
+</html>
