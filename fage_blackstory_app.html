@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>FaGe-Blackstory-App</title>
+  <meta name="theme-color" content="#09090b" />
+  <style>
+    :root {
+      --bg: #030304;
+      --panel: rgba(12, 12, 15, 0.94);
+      --panel-2: rgba(24, 24, 27, 0.88);
+      --border: rgba(82, 82, 91, 0.55);
+      --border-red: rgba(127, 29, 29, 0.8);
+      --red: #b91c1c;
+      --red-2: #7f1d1d;
+      --red-3: #ef4444;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --dim: #71717a;
+      --shadow: rgba(0, 0, 0, 0.65);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 12% 2%, rgba(127, 29, 29, 0.45), transparent 28rem),
+        radial-gradient(circle at 90% 88%, rgba(63, 63, 70, 0.6), transparent 30rem),
+        linear-gradient(180deg, #050506 0%, #000 100%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.055;
+      background-image:
+        linear-gradient(rgba(255,255,255,.55) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.55) 1px, transparent 1px);
+      background-size: 42px 42px;
+      z-index: 0;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.38) 72%, rgba(0,0,0,0.82) 100%);
+      z-index: 0;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(1240px, 100%);
+      margin: 0 auto;
+      padding: calc(1rem + var(--safe-top)) 1rem calc(2rem + var(--safe-bottom));
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      padding: clamp(1.25rem, 4vw, 2rem);
+      background: rgba(10, 10, 13, 0.94);
+      box-shadow: 0 24px 70px var(--shadow);
+      isolation: isolate;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 14% 0%, rgba(220, 38, 38, 0.35), transparent 35%),
+        radial-gradient(circle at 85% 25%, rgba(120, 53, 15, 0.25), transparent 35%);
+      z-index: -1;
+    }
+
+    .hero-inner {
+      display: flex;
+      gap: 1.5rem;
+      align-items: end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      border: 1px solid var(--border-red);
+      background: rgba(0,0,0,.42);
+      color: #fecaca;
+      border-radius: 999px;
+      padding: .55rem .9rem;
+      font-size: .9rem;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 900px;
+      font-size: clamp(2.1rem, 8.5vw, 4.4rem);
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+      font-weight: 950;
+    }
+
+    .hero p {
+      color: #d4d4d8;
+      max-width: 740px;
+      font-size: clamp(1rem, 2.5vw, 1.13rem);
+      margin: 1rem 0 0;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.45);
+      color: var(--text);
+      border-radius: 1.2rem;
+      min-height: 48px;
+      padding: .85rem 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      font-weight: 800;
+      text-decoration: none;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease, opacity .18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--red);
+      background: rgba(127, 29, 29, .45);
+    }
+
+    .btn-primary {
+      border-color: rgba(185, 28, 28, .9);
+      background: rgba(127, 29, 29, .55);
+      color: #fff;
+    }
+
+    .btn-danger {
+      border-color: rgba(220, 38, 38, .9);
+      background: #991b1b;
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+
+    .controls {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .control-panel {
+      border: 1px solid var(--border);
+      background: rgba(10, 10, 13, .88);
+      border-radius: 2rem;
+      padding: 1rem;
+      box-shadow: 0 18px 50px rgba(0,0,0,.5);
+    }
+
+    .control-label {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 900;
+      font-size: .78rem;
+      margin: 0 0 .65rem .15rem;
+    }
+
+    .select-wrap {
+      position: relative;
+    }
+
+    select, input {
+      width: 100%;
+      min-height: 54px;
+      border: 1px solid rgba(127, 29, 29, .82);
+      background: rgba(0,0,0,.72);
+      color: var(--text);
+      border-radius: 1.2rem;
+      padding: .9rem 3.1rem .9rem 1rem;
+      outline: none;
+      font-weight: 850;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+    }
+
+    select {
+      appearance: none;
+      -moz-appearance: none;
+      -webkit-appearance: none;
+    }
+
+    select:focus, input:focus {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 4px rgba(127, 29, 29, .32);
+    }
+
+    .select-arrow, .search-icon {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #fca5a5;
+      pointer-events: none;
+    }
+
+    .select-arrow {
+      right: 1rem;
+      font-size: 1.25rem;
+    }
+
+    .search-icon {
+      left: 1rem;
+      color: var(--dim);
+    }
+
+    .search-input {
+      padding-left: 2.8rem;
+      border-color: var(--border);
+      font-weight: 650;
+    }
+
+    .active-semester {
+      color: var(--dim);
+      margin: .7rem .15rem 0;
+      font-size: .92rem;
+    }
+
+    .active-semester strong {
+      color: #fecaca;
+    }
+
+    .list-head {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .list-title h2 {
+      margin: 0;
+      font-size: clamp(1.45rem, 5vw, 2rem);
+      letter-spacing: -0.04em;
+    }
+
+    .list-title p {
+      margin: .15rem 0 0;
+      color: var(--dim);
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1 1 260px;
+      max-width: 430px;
+    }
+
+    .story-grid {
+      display: grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      gap: .85rem;
+      margin-top: 1rem;
+    }
+
+    .story-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 170px;
+      border: 1px solid var(--border);
+      background: rgba(12, 12, 15, .96);
+      color: inherit;
+      border-radius: 1.7rem;
+      padding: 1.1rem;
+      text-align: left;
+      box-shadow: 0 14px 40px rgba(0,0,0,.5);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      width: 100%;
+    }
+
+    .story-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(127,29,29,.26), transparent 48%);
+      opacity: .55;
+      pointer-events: none;
+    }
+
+    .story-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(185, 28, 28, .85);
+      background: rgba(25, 25, 28, .98);
+    }
+
+    .story-card-top {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      margin-bottom: 1rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.45);
+      color: #fecaca;
+      border-radius: 999px;
+      padding: .35rem .65rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: .7rem;
+      font-weight: 900;
+    }
+
+    .skull {
+      opacity: .45;
+      font-size: 1.25rem;
+    }
+
+    .story-card h3 {
+      position: relative;
+      font-size: 1.28rem;
+      line-height: 1.12;
+      margin: 0;
+      letter-spacing: -0.03em;
+    }
+
+    .story-card p {
+      position: relative;
+      color: var(--muted);
+      font-size: .98rem;
+      margin: .75rem 0 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .story-view {
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      background: rgba(10, 10, 13, .95);
+      box-shadow: 0 24px 70px var(--shadow);
+      overflow: hidden;
+    }
+
+    .fixed-back {
+      position: fixed;
+      left: max(1rem, env(safe-area-inset-left, 1rem));
+      top: calc(.75rem + var(--safe-top));
+      z-index: 25;
+      min-height: 46px;
+      border-radius: 1rem;
+      padding: .72rem .9rem;
+      box-shadow: 0 18px 45px rgba(0,0,0,.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(0,0,0,.78);
+      border-color: rgba(127, 29, 29, .95);
+    }
+
+    .story-header {
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+      padding: 4.1rem 1rem 1.25rem;
+      isolation: isolate;
+    }
+
+    .story-header::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(185,28,28,.28), transparent 50%);
+      z-index: -1;
+    }
+
+    .story-header-row {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .story-semester {
+      color: #fca5a5;
+      text-transform: uppercase;
+      letter-spacing: .24em;
+      font-size: .8rem;
+      font-weight: 900;
+      margin: 0;
+    }
+
+    .story-header h2 {
+      margin: .4rem 0 0;
+      font-size: clamp(2rem, 8vw, 4rem);
+      line-height: .98;
+      letter-spacing: -0.06em;
+    }
+
+    .story-body {
+      padding: 1rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .read-box, .text-box, .diagnosis-box {
+      border-radius: 1.5rem;
+      padding: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    .read-box {
+      border-color: rgba(127, 29, 29, .85);
+      background: rgba(0,0,0,.52);
+      box-shadow: inset 0 0 30px rgba(127,29,29,.12);
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      border-radius: 999px;
+      background: rgba(127, 29, 29, .65);
+      color: #fecaca;
+      padding: .35rem .65rem;
+      font-size: .72rem;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: .75rem;
+    }
+
+    .read-sentence {
+      font-size: clamp(1.45rem, 6vw, 2.35rem);
+      line-height: 1.12;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+      margin: 0;
+    }
+
+    .text-box {
+      background: rgba(24,24,27,.6);
+    }
+
+    .text-box h3, .diagnosis-box h3 {
+      margin: 0 0 .65rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-size: .78rem;
+      font-weight: 950;
+    }
+
+    .text-box p {
+      margin: 0;
+      color: #e4e4e7;
+      font-size: clamp(1.02rem, 3.8vw, 1.16rem);
+    }
+
+    .diagnosis-box {
+      border-color: rgba(220, 38, 38, .75);
+      background: rgba(127, 29, 29, .48);
+      overflow: hidden;
+    }
+
+    .diagnosis-name {
+      margin: 0;
+      font-size: clamp(1.75rem, 7vw, 2.55rem);
+      font-weight: 950;
+      line-height: 1.05;
+      letter-spacing: -0.05em;
+    }
+
+    .hidden-diagnosis {
+      filter: blur(8px);
+      user-select: none;
+    }
+
+    .empty {
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      background: rgba(10, 10, 13, .9);
+      border-radius: 1.6rem;
+      padding: 2rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(0,0,0,.82);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .modal {
+      width: min(560px, 100%);
+      max-height: calc(100vh - 2rem);
+      overflow: auto;
+      border: 1px solid rgba(127, 29, 29, .8);
+      background: #09090b;
+      border-radius: 2rem;
+      box-shadow: 0 35px 90px rgba(0,0,0,.8);
+      position: relative;
+      isolation: isolate;
+    }
+
+    .modal::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(185,28,28,.35), transparent 46%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .modal-content {
+      padding: 1.25rem;
+    }
+
+    .modal-head {
+      display: flex;
+      gap: .85rem;
+      align-items: center;
+      padding-right: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .modal-icon {
+      width: 3.3rem;
+      height: 3.3rem;
+      border: 1px solid rgba(185,28,28,.75);
+      background: rgba(127, 29, 29, .58);
+      border-radius: 1.1rem;
+      display: grid;
+      place-items: center;
+      font-size: 1.55rem;
+      flex: 0 0 auto;
+    }
+
+    .modal small {
+      display: block;
+      color: #fca5a5;
+      text-transform: uppercase;
+      letter-spacing: .19em;
+      font-weight: 900;
+      margin-bottom: .2rem;
+    }
+
+    .modal h2 {
+      margin: 0;
+      font-size: clamp(1.45rem, 6vw, 2rem);
+      line-height: 1.05;
+      letter-spacing: -0.05em;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: .9rem;
+      right: .9rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.5);
+      color: var(--text);
+      font-weight: 950;
+    }
+
+    .rules {
+      border: 1px solid var(--border);
+      border-radius: 1.3rem;
+      background: rgba(0,0,0,.42);
+      padding: 1rem;
+      color: #e4e4e7;
+      display: grid;
+      gap: .65rem;
+    }
+
+    .rules p {
+      margin: 0;
+    }
+
+    .modal-actions {
+      display: grid;
+      gap: .75rem;
+      margin-top: 1rem;
+    }
+
+    .sr-only {
+      position: absolute !important;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (min-width: 700px) {
+      .app {
+        padding: calc(2rem + var(--safe-top)) 2rem calc(3rem + var(--safe-bottom));
+      }
+
+      .controls {
+        grid-template-columns: minmax(260px, 420px) 1fr;
+        align-items: start;
+      }
+
+      .control-panel.search-panel {
+        align-self: end;
+      }
+
+      .story-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .story-header {
+        padding: 4.5rem 2rem 2rem;
+      }
+
+      .story-body {
+        padding: 2rem;
+      }
+
+      .read-box, .text-box, .diagnosis-box {
+        padding: 1.5rem;
+        border-radius: 1.8rem;
+      }
+
+      .modal-content {
+        padding: 1.75rem;
+      }
+    }
+
+    @media (min-width: 1100px) {
+      .story-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .fixed-back {
+        left: calc((100vw - min(1240px, 100%)) / 2 + 2rem);
+      }
+    }
+
+    @media (max-width: 420px) {
+      .hero, .control-panel, .story-view {
+        border-radius: 1.55rem;
+      }
+
+      .hero-inner {
+        gap: 1rem;
+      }
+
+      .btn, select, input {
+        min-height: 50px;
+      }
+
+      .story-card {
+        min-height: 156px;
+      }
+
+      .fixed-back {
+        font-size: .9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero" id="homeView">
+      <div class="hero-inner">
+        <div>
+          <div class="tag" aria-label="Dunkle Fallrätsel">☾ Dunkle Fallrätsel für FaGe</div>
+          <h1>FaGe-Blackstory-App</h1>
+          <p>Wählen Sie ein Semester, öffnen Sie eine mysteriöse Story und lassen Sie die Gruppe die Diagnose erraten.</p>
+        </div>
+        <button class="btn btn-primary" id="showRulesBtn" type="button">📖 Regeln anzeigen</button>
+      </div>
+    </section>
+
+    <section id="listView">
+      <div class="controls">
+        <div class="control-panel">
+          <label class="control-label" for="semesterSelect">▾ Semester wählen</label>
+          <div class="select-wrap">
+            <select id="semesterSelect" aria-label="Semester auswählen"></select>
+            <span class="select-arrow">▾</span>
+          </div>
+          <p class="active-semester">Aktuelle Auswahl: <strong id="activeSemesterText">Alle Semester</strong></p>
+        </div>
+
+        <div class="control-panel search-panel">
+          <div class="list-head">
+            <div class="list-title">
+              <h2>Story-Auswahl</h2>
+              <p><span id="storyCount">0</span> passende Blackstorys</p>
+            </div>
+            <div class="search-box">
+              <span class="search-icon">⌕</span>
+              <input class="search-input" id="searchInput" type="search" placeholder="Titel oder Diagnose suchen..." autocomplete="off" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="story-grid" id="storyGrid"></div>
+      <div class="empty" id="emptyState" hidden>Keine Story gefunden. Ändern Sie die Suche oder wählen Sie ein anderes Semester.</div>
+    </section>
+
+    <section id="storyView" class="story-view" hidden>
+      <button class="btn fixed-back" id="backBtn" type="button">‹ Zurück</button>
+
+      <header class="story-header">
+        <div class="story-header-row">
+          <div>
+            <p class="story-semester" id="storySemester"></p>
+            <h2 id="storyTitle"></h2>
+          </div>
+          <button class="btn" id="toggleDiagnosisBtn" type="button">🙈 Diagnose ausblenden</button>
+        </div>
+      </header>
+
+      <div class="story-body">
+        <section class="read-box">
+          <div class="section-label">✦ Diesen Satz den Spielern vorlesen</div>
+          <p class="read-sentence" id="storySentence"></p>
+        </section>
+
+        <section class="text-box">
+          <h3>Geschichte für die Spielleitung</h3>
+          <p id="storyText"></p>
+        </section>
+
+        <section class="diagnosis-box">
+          <h3>Diagnose</h3>
+          <p class="diagnosis-name" id="storyDiagnosis"></p>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="rulesModal" hidden role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+    <div class="modal">
+      <button class="modal-close" id="closeRulesBtn" type="button" aria-label="Regeln schliessen">×</button>
+      <div class="modal-content">
+        <div class="modal-head">
+          <div class="modal-icon">☠</div>
+          <div>
+            <small>Vor dem Start</small>
+            <h2 id="rulesTitle">Regeln der FaGe-Blackstory</h2>
+          </div>
+        </div>
+
+        <div class="rules">
+          <p>• Lesen Sie den Beispielsatz vor.</p>
+          <p>• Die Spieler müssen die Diagnose und die Geschichte dahinter erraten.</p>
+          <p>• Die Spieler stellen geschlossene Fragen. Die Spielleitung darf nur mit Ja/Nein antworten.</p>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-danger" id="startStoryBtn" type="button">Story starten</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORIES = [
+      {
+        semester: "1. Semester",
+        title: "Das Gewicht der Stille",
+        diagnosis: "Adipositas",
+        sentence: "Die Waage schwieg nicht mehr, doch das eigentliche Gewicht lag längst woanders.",
+        story: "Herr Keller nahm über Jahre stark zu. Zuerst störte ihn nur, dass Kleider enger wurden und Treppen anstrengender waren. Dann kamen Bluthochdruck, Gelenkschmerzen und Atemnot dazu. Erst als er kaum noch aus dem Sessel hochkam, wurde klar: Sein Gewicht war nicht mehr nur ein Schönheitsproblem."
+      },
+      {
+        semester: "1. Semester",
+        title: "Die Verschwindende",
+        diagnosis: "Mangelernährung / Malnutrition",
+        sentence: "Der Teller wurde nie leer und trotzdem verschwand sie Stück für Stück.",
+        story: "Frau Baumann lebte alleine und sagte stets: «Ich habe keinen grossen Hunger.» Sie ass Tee, Zwieback und manchmal Suppe. Nach und nach verlor sie Gewicht, Kraft und Muskeln. Als sie beim Aufstehen stürzte, zeigte sich: Ihr Körper hatte zu wenig Energie und Eiweiss bekommen."
+      },
+      {
+        semester: "1. Semester",
+        title: "Der falsche Weg",
+        diagnosis: "Dysphagie",
+        sentence: "Der Bissen nahm den falschen Weg und plötzlich wurde Essen zur Gefahr.",
+        story: "Nach einem Schlaganfall konnte Herr Rüegg nicht mehr sicher schlucken. Er hustete beim Trinken, räusperte sich oft und wirkte nach dem Essen erschöpft. Einmal verschluckte er sich stark und bekam Atemnot. Das Problem war nicht der Appetit, sondern dass Nahrung und Flüssigkeit in die falsche Richtung geraten konnten."
+      },
+      {
+        semester: "1. Semester",
+        title: "Der dunkle Punkt",
+        diagnosis: "Melanom",
+        sentence: "Ein kleiner dunkler Fleck begann, seine eigene Geschichte zu schreiben.",
+        story: "Frau Steiner bemerkte seit Monaten ein dunkles Muttermal am Rücken. Es wurde grösser, unregelmässig und juckte manchmal. Weil es nicht schmerzte, wartete sie lange. Beim Hautarzt zeigte sich: Es handelte sich um ein bösartiges Melanom."
+      },
+
+      {
+        semester: "2. Semester",
+        title: "Das alte Knirschen",
+        diagnosis: "Arthrose",
+        sentence: "Das Gelenk erinnerte sich an jeden Schritt, den er je gemacht hatte.",
+        story: "Herr Meier hatte seit Jahren Schmerzen im Knie. Besonders beim Treppensteigen und nach längerer Belastung wurde es schlimmer. Das Gelenk war abgenutzt und entzündete sich immer wieder leicht. Die Schmerzen führten dazu, dass er sich weniger bewegte, wodurch alles noch schwieriger wurde."
+      },
+      {
+        semester: "2. Semester",
+        title: "Der unsichtbare Feind",
+        diagnosis: "Rheumatoide Arthritis",
+        sentence: "Ihre Hände kämpften gegen einen Feind, den niemand sehen konnte.",
+        story: "Frau Lutz wachte oft mit steifen, geschwollenen Fingern auf. Die Beschwerden betrafen beide Hände und wurden erst nach längerer Bewegung besser. Es war nicht einfach Alter oder Überlastung. Ihr Immunsystem griff die Gelenke an und verursachte eine chronische Entzündung."
+      },
+      {
+        semester: "2. Semester",
+        title: "Die hohlen Knochen",
+        diagnosis: "Osteoporose",
+        sentence: "Der Knochen brach nicht am Sturz, sondern an seiner eigenen Leere.",
+        story: "Frau Gasser stolperte über einen Teppichrand und fiel leicht auf die Seite. Trotzdem brach sie sich den Oberschenkelhals. Die Untersuchung zeigte, dass ihre Knochen stark entkalkt und brüchig waren. Die Krankheit hatte lange keine Schmerzen gemacht, bis der Knochen plötzlich nachgab."
+      },
+      {
+        semester: "2. Semester",
+        title: "Das wartende Blut",
+        diagnosis: "Thrombose / Phlebothrombose",
+        sentence: "In der Tiefe seines Beines stand das Blut still und wartete auf den falschen Moment.",
+        story: "Nach einer Operation bewegte sich Herr Frei kaum. Eines Tages war sein Unterschenkel geschwollen, gespannt und schmerzte. In einer tiefen Vene hatte sich ein Blutgerinnsel gebildet. Gefährlich wurde es, weil sich ein Teil lösen und in die Lunge wandern konnte."
+      },
+      {
+        semester: "2. Semester",
+        title: "Der untreue Körper",
+        diagnosis: "Inkontinenz",
+        sentence: "Sie verlor nicht nur Urin, sondern immer mehr Vertrauen in ihren eigenen Körper.",
+        story: "Frau Huber verlor immer wieder ungewollt Urin. Anfangs passierte es nur beim Husten oder Lachen, später auch plötzlich ohne Vorwarnung. Sie schämte sich und zog sich zurück. Die eigentliche Krankheit war nicht nur körperlich belastend, sondern nahm ihr immer mehr Freiheit."
+      },
+      {
+        semester: "2. Semester",
+        title: "Der leise Druck",
+        diagnosis: "Hypertonie",
+        sentence: "Der Druck stieg leise, bis die Stille gefährlich wurde.",
+        story: "Herr Brunner hatte keine Schmerzen und keine auffälligen Beschwerden. Bei einer Kontrolle war der Blutdruck aber wiederholt deutlich erhöht. Die Gefahr lag darin, dass der hohe Druck über Jahre Herz, Gehirn, Nieren und Gefässe schädigen konnte. Sein Körper war leise unter Druck."
+      },
+      {
+        semester: "2. Semester",
+        title: "Das gebrochene Versprechen",
+        diagnosis: "Herzinsuffizienz",
+        sentence: "Sein Herz schlug noch, aber es hielt sein Versprechen nicht mehr.",
+        story: "Frau Roth wurde bei kleinen Belastungen schnell kurzatmig. Abends waren ihre Beine geschwollen und nachts musste sie erhöht liegen. Ihr Herz pumpte nicht mehr stark genug. Dadurch staute sich Flüssigkeit im Körper und die Leistungsfähigkeit sank immer weiter."
+      },
+      {
+        semester: "2. Semester",
+        title: "Die versperrte Strasse",
+        diagnosis: "Koronare Herzkrankheit / Herzinfarkt",
+        sentence: "Ein Muskel schrie nach Luft, doch die Strasse zu ihm war versperrt.",
+        story: "Herr Sommer spürte Druck auf der Brust, Übelkeit und Schmerzen, die in den linken Arm ausstrahlten. Er wollte erst abwarten. Doch seine Herzkranzgefässe waren verengt und ein Gefäss verschloss sich. Ein Teil des Herzmuskels bekam zu wenig Sauerstoff."
+      },
+      {
+        semester: "2. Semester",
+        title: "Der verlorene Morgen",
+        diagnosis: "Apoplexie / Stroke",
+        sentence: "Ein Teil von ihr war plötzlich da und doch nicht mehr erreichbar.",
+        story: "Frau Berger stand am Frühstückstisch und plötzlich hing ein Mundwinkel herab. Sie konnte den rechten Arm kaum heben und sprach verwaschen. Im Gehirn war die Durchblutung gestört. Jede Minute war wichtig, weil Nervenzellen ohne Sauerstoff absterben können."
+      },
+      {
+        semester: "2. Semester",
+        title: "Das erloschene Licht",
+        diagnosis: "Depression",
+        sentence: "Die Welt wurde nicht dunkler, aber in ihm ging das Licht aus.",
+        story: "Herr Kunz zog sich immer mehr zurück. Dinge, die ihm früher Freude machten, wirkten bedeutungslos. Er schlief schlecht, fühlte sich wertlos und konnte sich kaum aufraffen. Es war keine Faulheit, sondern eine ernsthafte psychische Erkrankung."
+      },
+      {
+        semester: "2. Semester",
+        title: "Sonne und Abgrund",
+        diagnosis: "Bipolare Störung",
+        sentence: "Erst flog sie zu nah an der Sonne, dann fiel sie tiefer als der Boden.",
+        story: "Frau Senn erlebte Phasen, in denen sie extrem aktiv, euphorisch und risikofreudig war. Sie schlief kaum und fühlte sich unbesiegbar. Danach stürzte sie in tiefe Antriebslosigkeit und Hoffnungslosigkeit. Die Stimmung schwankte krankhaft zwischen Hochphasen und Depression."
+      },
+      {
+        semester: "2. Semester",
+        title: "Die Stimmen im Nichts",
+        diagnosis: "Schizophrenie",
+        sentence: "Die Stimmen kamen aus dem Nichts und waren doch lauter als alle Menschen im Raum.",
+        story: "Herr Novak hörte Stimmen, die andere nicht hörten. Er war überzeugt, beobachtet und bedroht zu werden. Für ihn war diese Wahrnehmung nicht gespielt und nicht einfach Fantasie. Die Erkrankung veränderte sein Denken, seine Wahrnehmung und sein Erleben der Realität."
+      },
+      {
+        semester: "2. Semester",
+        title: "Rettung und Gefahr",
+        diagnosis: "Borderline-Persönlichkeitsstörung",
+        sentence: "Nähe war Rettung und Gefahr zugleich.",
+        story: "Frau Weber erlebte Beziehungen sehr intensiv. Kleine Zurückweisungen fühlten sich für sie wie Verlassenwerden an. Ihre Stimmung wechselte rasch und sie verletzte sich manchmal selbst, um inneren Druck abzubauen. Hinter dem Verhalten standen grosse emotionale Instabilität und Angst."
+      },
+      {
+        semester: "2. Semester",
+        title: "Flucht ohne Verfolger",
+        diagnosis: "Angststörung",
+        sentence: "Sein Körper flüchtete, obwohl niemand ihn verfolgte.",
+        story: "Herr Ali bekam plötzlich Herzrasen, Schweissausbrüche und Atemnot. Er war überzeugt, gleich zu sterben. Medizinisch fand man keine akute körperliche Ursache. Seine Angstreaktion war so stark, dass harmlose Situationen für ihn bedrohlich wurden."
+      },
+      {
+        semester: "2. Semester",
+        title: "Die Gefahr danach",
+        diagnosis: "Posttraumatische Belastungsstörung",
+        sentence: "Die Gefahr war vorbei, aber sein Körper hatte es nie erfahren.",
+        story: "Herr Graf hatte einen schweren Verkehrsunfall überlebt. Danach kamen Albträume, Schreckhaftigkeit und Bilder, die sich aufdrängten. Bestimmte Geräusche lösten Panik aus. Sein Körper reagierte, als wäre die Gefahr noch immer da."
+      },
+
+      {
+        semester: "3. Semester",
+        title: "Das Gift im Inneren",
+        diagnosis: "Niereninsuffizienz",
+        sentence: "Als nichts mehr richtig hinausfand, blieb das Gift im Inneren zurück.",
+        story: "Herr Schmid merkte, dass er kaum noch Wasser lösen konnte. Er war müde, die Beine schwollen an und ihm war übel. Seine Nieren filterten das Blut nicht mehr ausreichend. Dadurch sammelten sich Wasser und Abfallstoffe im Körper."
+      },
+      {
+        semester: "3. Semester",
+        title: "Die Schaufensterpause",
+        diagnosis: "Periphere arterielle Verschlusskrankheit / PAVK",
+        sentence: "Er blieb vor jedem Schaufenster stehen, doch er sah nie hinein.",
+        story: "Herr Wyss bekam beim Gehen starke Schmerzen in den Waden. Nach kurzer Pause wurden sie besser. Die Arterien in den Beinen waren verengt und die Muskeln bekamen bei Belastung zu wenig Sauerstoff. Aus dem gemütlichen Stadtbummel wurde ein Warnsignal der Gefässe."
+      },
+      {
+        semester: "3. Semester",
+        title: "Der Zucker vor der Tür",
+        diagnosis: "Diabetes mellitus Typ 1",
+        sentence: "Der Zucker war überall, nur nicht dort, wo er gebraucht wurde.",
+        story: "Der 17-jährige Nico musste ständig trinken und zur Toilette. Er nahm ab, obwohl er ass. Sein Körper bildete kaum noch Insulin und der Zucker blieb im Blut statt in die Zellen zu gelangen. Ohne Behandlung konnte daraus eine lebensgefährliche Entgleisung entstehen."
+      },
+      {
+        semester: "3. Semester",
+        title: "Die verschlossenen Türen",
+        diagnosis: "Diabetes mellitus Typ 2",
+        sentence: "Die Türen standen vor dem Zucker offen, aber niemand liess ihn hinein.",
+        story: "Herr Ammann hatte lange erhöhte Blutzuckerwerte, bemerkte aber kaum etwas. Mit der Zeit kamen Müdigkeit, schlecht heilende Wunden und Kribbeln in den Füssen dazu. Seine Zellen reagierten schlechter auf Insulin. Die Krankheit entwickelte sich schleichend und betraf nach und nach Gefässe, Nerven und Organe."
+      },
+      {
+        semester: "3. Semester",
+        title: "Vier Warnlichter",
+        diagnosis: "Metabolisches Syndrom",
+        sentence: "Vier kleine Warnlichter blinkten gleichzeitig und niemand nannte es einen Unfall.",
+        story: "Frau Gerber hatte Bauchfett, hohen Blutdruck, erhöhte Blutfette und schlechte Blutzuckerwerte. Jedes Problem für sich wirkte noch kontrollierbar. Zusammen erhöhten sie aber stark das Risiko für Diabetes und Herz-Kreislauf-Erkrankungen. Ihr Körper lief dauerhaft im Risikomodus."
+      },
+      {
+        semester: "3. Semester",
+        title: "Der Gast im Husten",
+        diagnosis: "Tuberkulose",
+        sentence: "Sein Husten blieb länger als jeder Gast und nachts weinte sein Körper Schweiss.",
+        story: "Herr Demir hustete seit Wochen und nahm ungewollt ab. Nachts schwitzte er stark und fühlte sich erschöpft. Die Abklärung zeigte eine Tuberkulose der Lunge. Besonders wichtig war die Behandlung, weil die Krankheit ansteckend sein kann."
+      },
+      {
+        semester: "3. Semester",
+        title: "Beschädigte Botschaften",
+        diagnosis: "Multiple Sklerose",
+        sentence: "Die Botschaften kamen an, aber unterwegs wurden sie beschädigt.",
+        story: "Frau Meier hatte schubweise neurologische Beschwerden. Manchmal kribbelten die Beine, manchmal sah sie verschwommen oder war stark erschöpft. Das Immunsystem griff Strukturen im zentralen Nervensystem an. Die Krankheit verlief in Schüben und war schwer vorhersehbar."
+      },
+      {
+        semester: "3. Semester",
+        title: "Der langsame Körper",
+        diagnosis: "Morbus Parkinson",
+        sentence: "Sein Wille bewegte sich schnell, sein Körper kam langsam hinterher.",
+        story: "Herr Bühler bemerkte ein Zittern in der Hand, verlangsamte Bewegungen und eine steife Körperhaltung. Beim Gehen wurden die Schritte kleiner. In seinem Gehirn fehlte zunehmend Dopamin. Dadurch wurden Bewegungen schwerfälliger und alltägliche Handlungen immer langsamer."
+      },
+
+      {
+        semester: "4. Semester",
+        title: "Die unbrauchbare Luft",
+        diagnosis: "COPD",
+        sentence: "Die Luft war da, aber sie liess sich nicht mehr richtig benutzen.",
+        story: "Herr Steiner hatte jahrelang geraucht. Zuerst hustete er nur morgens, später wurde jede Treppe zur Herausforderung. Er bekam immer schlechter Luft, besonders bei Belastung. Seine Atemwege waren chronisch verengt und entzündet. Das Ausatmen wurde für ihn schwerer als das Einatmen."
+      },
+      {
+        semester: "4. Semester",
+        title: "Die unsichtbare Faust",
+        diagnosis: "Asthma bronchiale",
+        sentence: "Etwas Unsichtbares zog die Luftwege zu wie eine Faust.",
+        story: "Frau Keller bekam bei Pollen, Kälte und Stress plötzlich pfeifende Atmung und Engegefühl in der Brust. In solchen Momenten verkrampften sich ihre Bronchien und die Schleimhäute schwollen an. Nach dem Inhalieren wurde es besser. Zwischen den Anfällen wirkte sie oft völlig gesund."
+      },
+      {
+        semester: "4. Semester",
+        title: "Das Feuer in der Lunge",
+        diagnosis: "Pneumonie",
+        sentence: "In seiner Lunge brannte ein Feuer, das von aussen niemand sah.",
+        story: "Herr Huber bekam Fieber, Husten und fühlte sich sehr schwach. Später atmete er schneller und hatte Schmerzen beim tiefen Einatmen. In der Lunge hatte sich eine Entzündung entwickelt. Besonders gefährlich wurde es, weil sein Körper nicht mehr genug Sauerstoff aufnehmen konnte."
+      },
+      {
+        semester: "4. Semester",
+        title: "Der falsche Ort",
+        diagnosis: "Lungenembolie",
+        sentence: "Ein Gerinnsel verliess den falschen Ort und nahm ihr plötzlich den Atem.",
+        story: "Nach einer Operation hatte Frau Frei eine Thrombose im Bein. Ein Teil des Blutgerinnsels löste sich und wanderte mit dem Blutstrom in die Lunge. Plötzlich bekam sie Atemnot, Brustschmerzen und Angst. Ein Gefäss in der Lunge war verstopft und die Sauerstoffaufnahme wurde akut gestört."
+      },
+      {
+        semester: "4. Semester",
+        title: "Die vergessenen Atemzüge",
+        diagnosis: "Schlafapnoe",
+        sentence: "Jede Nacht vergass sein Körper für einen Moment das Atmen.",
+        story: "Herr Brunner schnarchte laut und hatte immer wieder Atempausen im Schlaf. Seine Partnerin merkte, dass er nachts plötzlich still wurde und dann nach Luft schnappte. Am Tag war er müde und unkonzentriert. Während des Schlafs kollabierten die Atemwege wiederholt teilweise oder ganz."
+      },
+      {
+        semester: "4. Semester",
+        title: "Der schweigende Knoten",
+        diagnosis: "Mammakarzinom",
+        sentence: "Der Knoten schwieg, aber sein Schweigen war verdächtig.",
+        story: "Frau Roth ertastete beim Duschen eine Verhärtung in der Brust. Sie hatte keine Schmerzen und wollte zuerst abwarten. Bei der Abklärung zeigte sich ein bösartiger Tumor. Die Diagnose traf sie hart, weil der Körper lange kaum Warnzeichen gezeigt hatte."
+      },
+      {
+        semester: "4. Semester",
+        title: "Der lange Weg in der Nacht",
+        diagnosis: "Prostatakarzinom",
+        sentence: "Die Nächte wurden kürzer und der Weg zur Toilette immer länger.",
+        story: "Herr Wyss musste nachts häufig Wasser lösen und der Harnstrahl wurde schwächer. Lange schob er es aufs Alter. Bei der Untersuchung zeigte sich ein Tumor der Prostata. Die Krankheit entwickelte sich langsam und blieb anfangs fast unbemerkt."
+      },
+      {
+        semester: "4. Semester",
+        title: "Der Krieg im Bauch",
+        diagnosis: "Morbus Crohn",
+        sentence: "Sein Darm führte einen Krieg, der in Schüben kam.",
+        story: "Herr Demir hatte immer wieder starke Bauchschmerzen, Durchfälle und verlor Gewicht. Die Beschwerden kamen in Schüben. Im Darm entzündeten sich Abschnitte chronisch, manchmal mit Fisteln oder Engstellen. Für andere wirkte er nur «oft krank», für ihn war jeder Schub ein Ausnahmezustand."
+      },
+      {
+        semester: "4. Semester",
+        title: "Die offene Entscheidung",
+        diagnosis: "Chronische Wunde / Ulcus cruris / Dekubitus",
+        sentence: "Die Haut öffnete sich und entschied, nicht mehr zurückzukehren.",
+        story: "Frau Gerber hatte eine Wunde am Unterschenkel, die über Wochen offen blieb. Die Haut war gereizt, die Wunde nässte und heilte schlecht. Durch Durchblutungsprobleme und Druck bekam das Gewebe zu wenig Versorgung. Aus einer alltäglichen Verletzung wurde ein chronisches Pflegeproblem."
+      },
+      {
+        semester: "4. Semester",
+        title: "Die verlorenen Wege",
+        diagnosis: "Demenz",
+        sentence: "Er verlor nicht Erinnerungen, sondern langsam die Wege zu ihnen.",
+        story: "Herr Baumann vergass Termine, verlegte Dinge und fand später den Heimweg nicht mehr. Anfangs konnte er vieles überspielen. Mit der Zeit wurden Orientierung, Denken und Alltagshandlungen schwieriger. Die Veränderungen waren nicht normale Vergesslichkeit, sondern Zeichen einer fortschreitenden Erkrankung des Gehirns."
+      },
+      {
+        semester: "4. Semester",
+        title: "Die fliehende Gegenwart",
+        diagnosis: "Alzheimer-Demenz",
+        sentence: "Die Vergangenheit blieb sitzen, während die Gegenwart immer wieder ging.",
+        story: "Frau Schmid konnte sich neue Informationen kaum merken. Alte Erinnerungen waren lange noch lebendig, aber der aktuelle Tag zerfiel in Lücken. Später kamen Sprachprobleme und Orientierungslosigkeit dazu. Bei Alzheimer sterben Nervenzellen im Gehirn fortschreitend ab."
+      },
+      {
+        semester: "4. Semester",
+        title: "Die stummen Einschläge",
+        diagnosis: "Vaskuläre Demenz",
+        sentence: "Kleine stumme Einschläge im Gehirn nahmen ihm Stück für Stück den Alltag.",
+        story: "Herr Graf hatte mehrere kleine Durchblutungsstörungen im Gehirn. Danach veränderte sich seine Leistungsfähigkeit stufenweise. Mal war er klar, mal sehr verlangsamt und unkonzentriert. Die Demenz entstand durch geschädigte Blutgefässe und wiederholte kleine Hirnschäden."
+      },
+      {
+        semester: "4. Semester",
+        title: "Die verkleidete Welt",
+        diagnosis: "Delir",
+        sentence: "Am Morgen war die Welt noch echt, am Abend hatte sie sich verkleidet.",
+        story: "Frau Meier war nach einer Operation plötzlich verwirrt. Sie wusste nicht mehr, wo sie war, sah Dinge, die nicht da waren und wechselte zwischen Unruhe und Schläfrigkeit. Die Veränderung kam akut und schwankte stark. Auslöser konnten Infekt, Schmerzen, Medikamente, Flüssigkeitsmangel oder die Operation sein."
+      },
+
+      {
+        semester: "5. Semester",
+        title: "Das Gewitter im Kopf",
+        diagnosis: "Epilepsie",
+        sentence: "Nach dem Gewitter lag er am Boden, doch kein Blitz hatte ihn getroffen.",
+        story: "Herr Novak hatte plötzlich einen Krampfanfall. Er verlor das Bewusstsein, fiel zu Boden und zuckte am ganzen Körper. Danach war er erschöpft und verwirrt. Im Gehirn hatten Nervenzellen plötzlich unkontrolliert elektrische Signale abgegeben."
+      },
+      {
+        semester: "5. Semester",
+        title: "Der fallende Kaffee",
+        diagnosis: "Apoplexie / Stroke",
+        sentence: "Der Kaffee fiel zuerst. Dann fiel auf, dass sein Arm nicht mehr gehorchte.",
+        story: "Herr Kunz bekam plötzlich eine Halbseitenlähmung und konnte kaum sprechen. Sein Gesicht war einseitig schief. Im Gehirn war ein Gefäss verschlossen oder geplatzt. Weil Gehirnzellen sehr schnell Schaden nehmen, musste sofort gehandelt werden."
+      },
+      {
+        semester: "5. Semester",
+        title: "Nicht heute",
+        diagnosis: "Abhängigkeitserkrankung / Sucht",
+        sentence: "Er sagte, er könne jederzeit aufhören und meinte damit nie heute.",
+        story: "Herr Keller konsumierte weiter, obwohl Arbeit, Beziehungen und Gesundheit litten. Er brauchte immer mehr, dachte ständig daran und verlor die Kontrolle. Es ging nicht mehr um Genuss, sondern um Zwang, Gewöhnung und Vermeidung von Entzug."
+      },
+      {
+        semester: "5. Semester",
+        title: "Der Schlüssel im Glas",
+        diagnosis: "Alkoholabhängigkeit",
+        sentence: "Aus einem Glas wurde ein Schlüssel und irgendwann passte er in jedes Schloss des Tages.",
+        story: "Frau Berger trank anfangs nur abends. Später begann sie schon am Morgen, um Zittern und Unruhe zu dämpfen. Sie versteckte Flaschen und verharmloste die Menge. Der Alkohol bestimmte zunehmend ihren Alltag und ihr Körper reagierte ohne Alkohol mit Entzugssymptomen."
+      },
+      {
+        semester: "5. Semester",
+        title: "Die Tablette befiehlt",
+        diagnosis: "Medikamentenabhängigkeit",
+        sentence: "Die Tablette sollte Ruhe bringen, doch am Ende gab sie die Befehle.",
+        story: "Herr Frei erhielt nach einer Krise Schlaf- und Beruhigungsmittel. Anfangs nahm er sie nach Verordnung, später häufiger und in höherer Dosis. Ohne Tabletten wurde er unruhig und konnte nicht schlafen. Die Grenze zwischen Behandlung und Abhängigkeit wurde schleichend überschritten."
+      },
+      {
+        semester: "5. Semester",
+        title: "Das Ende des Mangels",
+        diagnosis: "Drogenabhängigkeit",
+        sentence: "Er suchte den Rausch nicht mehr, sondern nur noch das Ende des Mangels.",
+        story: "Nico konsumierte regelmässig Drogen. Mit der Zeit brauchte er mehr, um überhaupt noch zu funktionieren. Schule, Freunde und Körperpflege wurden unwichtiger. Die Substanz bestimmte seinen Tagesablauf, sein Denken und seine Entscheidungen."
+      },
+      {
+        semester: "5. Semester",
+        title: "Der Kampf hinter dem Teller",
+        diagnosis: "Essstörungen",
+        sentence: "Der Teller war voll, aber der Kampf fand woanders statt.",
+        story: "Frau Lutz wirkte nach aussen kontrolliert. Innerlich drehte sich aber fast alles um Essen, Gewicht und Schuldgefühle. Mal ass sie kaum, mal verlor sie die Kontrolle. Eine Essstörung ist nicht einfach eine Frage von Disziplin, sondern eine ernsthafte psychische Erkrankung."
+      },
+      {
+        semester: "5. Semester",
+        title: "Der lügende Spiegel",
+        diagnosis: "Anorexia nervosa",
+        sentence: "Der Spiegel zeigte das Gegenteil der Realität.",
+        story: "Lea ass immer weniger und zählte jede Kalorie. Obwohl sie stark abnahm, fühlte sie sich zu dick. Sport wurde zur Pflicht, Essen zur Bedrohung. Ihr Körper geriet in einen Mangelzustand, während sie selbst die Gefahr kaum wahrhaben konnte."
+      },
+      {
+        semester: "5. Semester",
+        title: "Ungeschehen",
+        diagnosis: "Bulimia nervosa",
+        sentence: "Was sie verschlang, wollte sie sofort wieder ungeschehen machen.",
+        story: "Frau Senn hatte wiederkehrende Essanfälle. Danach schämte sie sich stark und versuchte, das Essen durch Erbrechen oder andere Massnahmen «rückgängig» zu machen. Ihr Gewicht konnte dabei unauffällig bleiben. Trotzdem waren Körper und Psyche stark belastet."
+      },
+      {
+        semester: "5. Semester",
+        title: "Das satte Schweigen",
+        diagnosis: "Binge-Eating-Disorder",
+        sentence: "Er ass, bis das Schweigen in ihm für einen Moment satt war.",
+        story: "Herr Ali hatte immer wieder Essanfälle, bei denen er grosse Mengen in kurzer Zeit ass. Danach fühlte er sich schuldig und beschämt. Im Unterschied zur Bulimie versuchte er das Essen nicht regelmässig durch Erbrechen oder Abführen auszugleichen. Das Essen wurde zur Bewältigung von innerem Druck."
+      },
+      {
+        semester: "5. Semester",
+        title: "Die leise Abwehr",
+        diagnosis: "HIV / AIDS",
+        sentence: "Das Virus blieb lange leise, bis die Abwehr keine Antwort mehr hatte.",
+        story: "Herr Sommer lebte längere Zeit mit einer unbehandelten HIV-Infektion. Das Virus schwächte nach und nach sein Immunsystem. Als die Abwehr stark geschädigt war, traten Infektionen auf, mit denen ein gesunder Körper besser umgehen könnte. In diesem Stadium sprach man von AIDS."
+      },
+      {
+        semester: "5. Semester",
+        title: "Die geteilte Wahrheit",
+        diagnosis: "Sexuell übertragbare Infektionen",
+        sentence: "Es begann dort, wo niemand gerne hinschaut und endete mit einer Wahrheit, die geteilt werden musste.",
+        story: "Herr Meier bemerkte Brennen beim Wasserlösen und ungewöhnlichen Ausfluss. Zuerst hoffte er, es gehe von alleine weg. Die Abklärung zeigte eine sexuell übertragbare Infektion. Wichtig waren Behandlung, Schutz und das Informieren möglicher Sexualpartnerinnen oder Sexualpartner."
+      }
+    ];
+
+    const SEMESTERS = ["Alle Semester", "1. Semester", "2. Semester", "3. Semester", "4. Semester", "5. Semester"];
+
+    const els = {
+      semesterSelect: document.getElementById("semesterSelect"),
+      activeSemesterText: document.getElementById("activeSemesterText"),
+      searchInput: document.getElementById("searchInput"),
+      storyGrid: document.getElementById("storyGrid"),
+      storyCount: document.getElementById("storyCount"),
+      emptyState: document.getElementById("emptyState"),
+      listView: document.getElementById("listView"),
+      storyView: document.getElementById("storyView"),
+      storySemester: document.getElementById("storySemester"),
+      storyTitle: document.getElementById("storyTitle"),
+      storySentence: document.getElementById("storySentence"),
+      storyText: document.getElementById("storyText"),
+      storyDiagnosis: document.getElementById("storyDiagnosis"),
+      backBtn: document.getElementById("backBtn"),
+      toggleDiagnosisBtn: document.getElementById("toggleDiagnosisBtn"),
+      rulesModal: document.getElementById("rulesModal"),
+      showRulesBtn: document.getElementById("showRulesBtn"),
+      closeRulesBtn: document.getElementById("closeRulesBtn"),
+      startStoryBtn: document.getElementById("startStoryBtn")
+    };
+
+    let state = {
+      selectedSemester: "Alle Semester",
+      query: "",
+      pendingStory: null,
+      activeStory: null,
+      diagnosisVisible: true
+    };
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function storyId(story) {
+      return `${story.semester}__${story.diagnosis}`.replace(/\s+/g, "_");
+    }
+
+    function getCounts() {
+      const counts = { "Alle Semester": STORIES.length };
+      STORIES.forEach(story => {
+        counts[story.semester] = (counts[story.semester] || 0) + 1;
+      });
+      return counts;
+    }
+
+    function populateSemesterSelect() {
+      const counts = getCounts();
+      els.semesterSelect.innerHTML = SEMESTERS.map(semester => {
+        const count = counts[semester] || 0;
+        return `<option value="${escapeHtml(semester)}">${escapeHtml(semester)} · ${count} Storys</option>`;
+      }).join("");
+    }
+
+    function getFilteredStories() {
+      const q = state.query.trim().toLowerCase();
+      return STORIES.filter(story => {
+        const semesterMatches = state.selectedSemester === "Alle Semester" || story.semester === state.selectedSemester;
+        const queryMatches = !q ||
+          story.title.toLowerCase().includes(q) ||
+          story.diagnosis.toLowerCase().includes(q) ||
+          story.sentence.toLowerCase().includes(q);
+        return semesterMatches && queryMatches;
+      });
+    }
+
+    function renderStoryGrid() {
+      const stories = getFilteredStories();
+      els.activeSemesterText.textContent = state.selectedSemester;
+      els.storyCount.textContent = stories.length;
+      els.emptyState.hidden = stories.length !== 0;
+
+      els.storyGrid.innerHTML = stories.map(story => `
+        <button class="story-card" type="button" data-story-id="${escapeHtml(storyId(story))}">
+          <div class="story-card-top">
+            <span class="badge">${escapeHtml(story.semester)}</span>
+            <span class="skull" aria-hidden="true">☠</span>
+          </div>
+          <h3>${escapeHtml(story.title)}</h3>
+          <p>${escapeHtml(story.sentence)}</p>
+        </button>
+      `).join("");
+
+      els.storyGrid.querySelectorAll("[data-story-id]").forEach(card => {
+        card.addEventListener("click", () => {
+          const id = card.getAttribute("data-story-id");
+          const story = STORIES.find(item => storyId(item) === id);
+          if (story) openRulesForStory(story);
+        });
+      });
+    }
+
+    function openRulesForStory(story) {
+      state.pendingStory = story;
+      openModal();
+    }
+
+    function openModal() {
+      els.rulesModal.hidden = false;
+      document.body.style.overflow = "hidden";
+      setTimeout(() => els.startStoryBtn.focus(), 0);
+    }
+
+    function closeModal({ startPending = false } = {}) {
+      els.rulesModal.hidden = true;
+      document.body.style.overflow = "";
+      if (startPending && state.pendingStory) {
+        showStory(state.pendingStory);
+        state.pendingStory = null;
+      } else {
+        state.pendingStory = null;
+      }
+    }
+
+    function showStory(story) {
+      state.activeStory = story;
+      state.diagnosisVisible = true;
+
+      els.storySemester.textContent = story.semester;
+      els.storyTitle.textContent = story.title;
+      els.storySentence.textContent = `«${story.sentence}»`;
+      els.storyText.textContent = story.story;
+      els.storyDiagnosis.textContent = story.diagnosis;
+
+      updateDiagnosisVisibility();
+
+      els.listView.hidden = true;
+      els.storyView.hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function backToList() {
+      state.activeStory = null;
+      els.storyView.hidden = true;
+      els.listView.hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function updateDiagnosisVisibility() {
+      els.storyDiagnosis.classList.toggle("hidden-diagnosis", !state.diagnosisVisible);
+      els.toggleDiagnosisBtn.textContent = state.diagnosisVisible ? "🙈 Diagnose ausblenden" : "👁 Diagnose anzeigen";
+    }
+
+    function init() {
+      populateSemesterSelect();
+      renderStoryGrid();
+
+      els.semesterSelect.addEventListener("change", event => {
+        state.selectedSemester = event.target.value;
+        renderStoryGrid();
+      });
+
+      els.searchInput.addEventListener("input", event => {
+        state.query = event.target.value;
+        renderStoryGrid();
+      });
+
+      els.backBtn.addEventListener("click", backToList);
+
+      els.toggleDiagnosisBtn.addEventListener("click", () => {
+        state.diagnosisVisible = !state.diagnosisVisible;
+        updateDiagnosisVisibility();
+      });
+
+      els.showRulesBtn.addEventListener("click", () => {
+        state.pendingStory = null;
+        openModal();
+      });
+
+      els.closeRulesBtn.addEventListener("click", () => closeModal({ startPending: false }));
+
+      els.startStoryBtn.addEventListener("click", () => {
+        if (state.pendingStory) {
+          closeModal({ startPending: true });
+        } else {
+          closeModal({ startPending: false });
+        }
+      });
+
+      els.rulesModal.addEventListener("click", event => {
+        if (event.target === els.rulesModal) closeModal({ startPending: false });
+      });
+
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && !els.rulesModal.hidden) closeModal({ startPending: false });
+        if (event.key === "Escape" && state.activeStory && els.rulesModal.hidden) backToList();
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
