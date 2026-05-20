@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>FaGe Snake 3D – Lernspiel</title>
+  <style>
+    :root{
+      --bg:#f5fbff;
+      --bg2:#eef7ff;
+      --panel:#ffffff;
+      --panel2:#f8fcff;
+      --text:#183044;
+      --muted:#62778b;
+      --line:#d9e9f4;
+      --blue:#5bb8ff;
+      --blue2:#2e86de;
+      --mint:#57d9aa;
+      --mint2:#11a579;
+      --coral:#ff7d76;
+      --coral2:#e24d55;
+      --lav:#8d7cff;
+      --yellow:#ffd166;
+      --shadow:0 18px 45px rgba(50,109,150,.16);
+      --radius:24px;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text);background:var(--bg);overscroll-behavior:none;}
+    body{
+      min-height:100svh;
+      background:
+        radial-gradient(circle at 10% 8%,rgba(91,184,255,.28),transparent 28%),
+        radial-gradient(circle at 82% 10%,rgba(87,217,170,.22),transparent 25%),
+        radial-gradient(circle at 54% 105%,rgba(255,209,102,.26),transparent 34%),
+        linear-gradient(145deg,#f7fcff 0%,#eef8ff 58%,#fff9ec 100%);
+      overflow-x:hidden;
+    }
+    .app{width:min(1240px,100%);min-height:100svh;margin:0 auto;padding:14px;display:grid;grid-template-rows:auto auto 1fr;gap:12px;}
+    .topbar,.questionCard,.footer{background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(14px);}
+    .topbar{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:12px 14px;}
+    .brand{display:flex;align-items:center;gap:12px;min-width:0}
+    .logoOrb{width:48px;height:48px;border-radius:17px;background:linear-gradient(135deg,#75d6ff,#69e6bc 54%,#ffd166);display:grid;place-items:center;box-shadow:0 12px 24px rgba(46,134,222,.22),inset 0 1px 0 rgba(255,255,255,.75);font-size:25px;flex:0 0 auto}
+    .brand h1{margin:0;font-size:clamp(1.35rem,3vw,2.2rem);letter-spacing:-.04em;line-height:1}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+    .stats{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+    .stat{min-width:92px;text-align:center;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#fff,#f3fbff);padding:8px 10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
+    .stat small{display:block;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;font-weight:900}
+    .stat b{display:block;font-size:1.32rem;line-height:1.1;font-weight:1000;color:#16324a}
+    .controls{display:grid;grid-template-columns:minmax(180px,1fr) auto auto;gap:9px;align-items:center}
+    select,.btn,input{font:inherit;border:0;outline:0}
+    select,.nickBox{width:100%;border:1px solid var(--line);border-radius:18px;background:#fff;padding:12px 14px;color:var(--text);font-weight:800;box-shadow:0 8px 18px rgba(50,109,150,.08)}
+    .btn{border-radius:18px;padding:12px 16px;font-weight:950;cursor:pointer;color:#083047;background:linear-gradient(135deg,#7ce4bd,#b8f7df);border:1px solid rgba(17,165,121,.18);box-shadow:0 10px 22px rgba(17,165,121,.16);transition:.14s ease;white-space:nowrap}
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.02)}
+    .btn:active{transform:translateY(1px) scale(.99)}
+    .btn.secondary{background:linear-gradient(135deg,#eaf6ff,#ffffff);color:#24465d;border-color:var(--line);box-shadow:0 10px 22px rgba(46,134,222,.10)}
+    .btn.danger{background:linear-gradient(135deg,#ffaaa6,#ff7d76);color:#fff;border-color:rgba(226,77,85,.18);box-shadow:0 10px 22px rgba(226,77,85,.20)}
+    .btn:disabled{opacity:.48;cursor:not-allowed;filter:grayscale(.35);transform:none}
+    .questionCard{display:grid;grid-template-columns:1.2fr 1fr;gap:12px;padding:12px 14px;align-items:center}
+    .targetLabel{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;font-weight:900;margin-bottom:5px}
+    #targetCategory{font-weight:1000;font-size:clamp(1.25rem,3vw,2rem);line-height:1.05;color:#173b56}
+    .termChips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .termChip{border-radius:20px;padding:10px 12px;border:1px solid var(--line);background:#fff;min-width:0;box-shadow:0 8px 20px rgba(50,109,150,.08)}
+    .termChip small{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:900;margin-bottom:3px}
+    .termChip b{display:block;font-size:1.05rem;line-height:1.18;overflow-wrap:anywhere}
+    .termChip.option{--chip-color:var(--blue2);--chip-text:var(--blue2);border-color:color-mix(in srgb,var(--chip-color) 38%,#ffffff);border-left:10px solid var(--chip-color);background:linear-gradient(135deg,#ffffff,#f7fcff)}
+    .termChip.option small{color:var(--chip-text);display:flex;align-items:center;gap:7px}
+    .termChip.option b{color:var(--chip-text);font-weight:1000;display:flex;align-items:center;gap:8px}
+    .answerDot{width:14px;height:14px;border-radius:999px;background:var(--chip-color);box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 14px color-mix(in srgb,var(--chip-color) 55%,transparent);display:inline-block;flex:0 0 auto}
+    .termChip.option b::before{content:"";width:15px;height:15px;border-radius:999px;background:var(--chip-color);box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 14px color-mix(in srgb,var(--chip-color) 55%,transparent);flex:0 0 auto}
+    .main{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,340px);gap:12px;min-height:0}
+    .stageWrap{position:relative;background:rgba(255,255,255,.75);border:1px solid var(--line);border-radius:30px;box-shadow:var(--shadow);padding:12px;min-height:520px;display:flex;flex-direction:column;gap:10px;}
+    .stage{position:relative;flex:1;border-radius:24px;overflow:hidden;background:linear-gradient(180deg,#eaf8ff,#f8fdff 42%,#fff9e9);border:1px solid #cce6f7;box-shadow:inset 0 2px 0 rgba(255,255,255,.88), inset 0 -22px 55px rgba(91,184,255,.08)}
+    canvas{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+    .mobilePad{display:grid;grid-template-columns:74px 74px 74px;grid-template-rows:54px 54px;gap:8px;justify-content:center;align-items:center;user-select:none;touch-action:manipulation;padding:2px 0 0}
+    .padBtn{border:1px solid rgba(46,134,222,.18);border-radius:20px;background:linear-gradient(180deg,#ffffff,#eaf7ff);box-shadow:0 10px 20px rgba(46,134,222,.12),inset 0 1px 0 rgba(255,255,255,.95);font-size:1.55rem;font-weight:1000;color:#173b56;cursor:pointer;min-height:54px}
+    .padBtn:active,.padBtn.active{transform:translateY(2px) scale(.98);background:linear-gradient(180deg,#dff5ff,#ffffff)}
+    .padUp{grid-column:2;grid-row:1}.padLeft{grid-column:1;grid-row:2}.padDown{grid-column:2;grid-row:2}.padRight{grid-column:3;grid-row:2}
+    .startHint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(255,255,255,.9);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:24px;padding:18px;max-width:420px;text-align:center;z-index:8}
+    .startHint.hidden{display:none}
+    .startHint h2{margin:0 0 6px;font-size:1.6rem;letter-spacing:-.04em}
+    .startHint p{margin:0;color:var(--muted);line-height:1.35}
+    .side{display:flex;flex-direction:column;gap:12px;min-height:0}
+    .panel{background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:12px}
+    .panel h2{margin:0 0 8px;font-size:1.1rem;letter-spacing:-.02em}
+    .rules{color:var(--muted);font-size:.9rem;line-height:1.38;margin:0;padding-left:18px}
+    .highscoreHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .bestLine{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:950}
+    .bestLine small{display:block;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.12em}
+    .plusBtn{width:38px;height:38px;border-radius:14px;border:1px solid var(--line);background:#fff;color:#173b56;font-size:24px;font-weight:1000;cursor:pointer;box-shadow:0 8px 18px rgba(50,109,150,.08)}
+    .highscoreBody{display:none;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+    .highscoreDock.open .highscoreBody{display:block}
+    .scoreList{max-height:245px;overflow:auto;margin:0;padding:0;list-style:none;display:grid;gap:6px}
+    .scoreList li{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;background:#f6fbff;border:1px solid var(--line);border-radius:14px;padding:8px 10px;font-size:.92rem}
+    .rank{font-weight:1000;color:var(--blue2)}.name{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pts{font-weight:1000;color:var(--mint2)}
+    .highscoreTools{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}
+    .miniStatus{min-height:17px;font-size:.78rem;color:var(--muted);line-height:1.25;margin-top:7px}
+    .miniStatus.ok{color:var(--mint2)}.miniStatus.error{color:var(--coral2)}
+    .overlay{position:fixed;inset:0;z-index:90;background:rgba(211,237,250,.76);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:18px}
+    .overlay.hidden{display:none}
+    .dialog{width:min(520px,100%);background:#fff;border:1px solid var(--line);border-radius:30px;box-shadow:0 30px 90px rgba(50,109,150,.26);padding:24px;text-align:center}
+    .dialog h1{margin:0 0 6px;font-size:clamp(2.1rem,8vw,4rem);letter-spacing:-.07em}
+    .dialog p{margin:8px auto;color:var(--muted);line-height:1.4}
+    .bigScore{font-size:3.4rem;font-weight:1000;color:var(--mint2);line-height:1;margin:12px 0;text-shadow:0 8px 20px rgba(17,165,121,.18)}
+    .btnRow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+    .footer{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:9px 12px;color:var(--muted);font-size:.78rem}
+    .particle{position:fixed;z-index:110;width:8px;height:8px;border-radius:999px;pointer-events:none;background:var(--mint);box-shadow:0 0 14px currentColor;animation:particle .75s ease-out forwards}
+    @keyframes particle{from{opacity:1;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--x),var(--y)) scale(.12)}}
+    .toast{position:fixed;z-index:120;left:50%;top:42%;transform:translate(-50%,-50%);pointer-events:none;background:rgba(255,255,255,.92);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:999px;padding:12px 18px;font-weight:1000;color:#173b56;animation:toast 1s ease forwards}
+    @keyframes toast{0%{opacity:0;transform:translate(-50%,-30%) scale(.85)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.04)}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+    @media(max-width:900px){
+      .app{padding:8px;gap:8px}
+      .topbar{grid-template-columns:1fr}
+      .controls{grid-template-columns:1fr 1fr 1fr}
+      .controls select{grid-column:1/-1}
+      .questionCard{grid-template-columns:1fr}
+      .main{grid-template-columns:1fr}
+      .side{order:2}
+      .stageWrap{min-height:500px;padding:8px}
+      .termChips{grid-template-columns:1fr 1fr}
+      .brand p{display:none}
+      .stats{justify-content:stretch}.stat{flex:1;min-width:80px}
+    }
+    @media(max-width:520px){
+      .topbar,.questionCard,.panel,.stageWrap{border-radius:20px}
+      .logoOrb{width:42px;height:42px;border-radius:14px}
+      .brand h1{font-size:1.25rem}
+      .controls{grid-template-columns:1fr 1fr}
+      .termChips{grid-template-columns:1fr}
+      .stageWrap{min-height:460px}
+      .mobilePad{grid-template-columns:86px 86px 86px;grid-template-rows:58px 58px}
+      .padBtn{min-height:58px;font-size:1.7rem}
+      .highscoreTools{grid-template-columns:1fr}
+      .btn{padding:11px 12px}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logoOrb">🐍</div>
+        <div><h1>FaGe Snake 3D</h1><p>Antwort wählen · Punkt fressen · Highscore speichern</p></div>
+      </div>
+      <div class="stats" aria-label="Spielwerte">
+        <div class="stat"><small>Punkte</small><b id="scoreValue">0</b></div>
+        <div class="stat"><small>Länge</small><b id="lengthValue">1</b></div>
+      </div>
+    </header>
+
+    <section class="controls" aria-label="Spielsteuerung">
+      <select id="semesterSelect" aria-label="Semester auswählen"></select>
+      <button class="btn" id="startBtn" type="button">Start</button>
+      <button class="btn danger" id="restartBtn" type="button">Reset</button>
+    </section>
+
+    <section class="questionCard">
+      <div>
+        <div class="targetLabel">Gesuchte Definition / Übersetzung</div>
+        <div id="targetCategory">Semester wählen und starten</div>
+      </div>
+      <div class="termChips">
+        <div class="termChip option" id="optionAChip"><b id="optionAText">–</b></div>
+        <div class="termChip option" id="optionBChip"><b id="optionBText">–</b></div>
+      </div>
+    </section>
+
+    <section class="main">
+      <div class="stageWrap">
+        <div class="stage" id="stage">
+          <canvas id="gameCanvas"></canvas>
+          <div class="startHint" id="startHint">
+            <h2>Bereit?</h2>
+            <p>Wähle den Punkt in der Farbe des passenden Begriffs. Steuere mit Wischen, D-Pad, Pfeiltasten oder WASD.</p>
+          </div>
+        </div>
+          <div class="mobilePad" aria-label="Touch-Steuerung">
+            <button class="padBtn padUp" type="button" data-dir="up" aria-label="Nach oben">↑</button>
+            <button class="padBtn padLeft" type="button" data-dir="left" aria-label="Nach links">←</button>
+            <button class="padBtn padDown" type="button" data-dir="down" aria-label="Nach unten">↓</button>
+            <button class="padBtn padRight" type="button" data-dir="right" aria-label="Nach rechts">→</button>
+          </div>
+      </div>
+
+      <aside class="side">
+        <div class="panel highscoreDock" id="highscoreDock">
+          <div class="highscoreHead">
+            <div class="bestLine"><small>Online-Highscore</small><span id="bestScoreText">Lade…</span></div>
+            <button class="plusBtn" id="toggleHighscores" type="button" aria-label="Topliste öffnen">+</button>
+          </div>
+          <div class="highscoreBody">
+            <ol class="scoreList" id="scoreList"><li><span class="rank">–</span><span class="name">Noch keine Daten</span><span class="pts">–</span></li></ol>
+            <div class="highscoreTools">
+              <input class="nickBox" id="nicknameInput" placeholder="Nickname (öffentlich angezeigt)" maxlength="18" />
+              <button class="btn" id="saveScoreBtn" type="button" disabled>Score speichern</button>
+            </div>
+            <div id="highscoreStatus" class="miniStatus"></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+  </main>
+
+  <div class="overlay hidden" id="gameOverOverlay">
+    <div class="dialog">
+      <h1>Game Over</h1>
+      <p>Finaler Score</p>
+      <div class="bigScore" id="finalScoreText">0</div>
+      <p>Öffne die Highscore-Liste und speichere deinen Score mit deinem Nickname.</p>
+      <div class="btnRow">
+        <button class="btn" id="playAgainBtn" type="button">Nochmals spielen</button>
+        <button class="btn secondary" id="showScoresAfterGameBtn" type="button">Highscore eintragen</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    const DEFAULT_TERMS_BY_SEMESTER = {
+      "Semester 1": {
+        "HK A1: Berufsperson": [
+          {term:"Instruktion", definition:"Gezielte Anleitung und Unterweisung in pflegerischen Tätigkeiten."},
+          {term:"Reflexion", definition:"Systematisches Nachdenken über berufliche Erfahrungen und Handlungen zur Kompetenzentwicklung."},
+          {term:"Lernjournal", definition:"Instrument zur Dokumentation und Reflexion des eigenen Lernprozesses."},
+          {term:"Arbeitsplan", definition:"Strukturierte Übersicht der Aufgaben, die innerhalb einer bestimmten Zeit erledigt werden sollen."},
+          {term:"Datenschutz", definition:"Schutz personenbezogener Daten vor Missbrauch."},
+          {term:"Berufsgeheimnis", definition:"Gesetzliche Schweigepflicht über Informationen, die im Beruf anvertraut werden."},
+          {term:"Dokumentation", definition:"Schriftliches Festhalten von Beobachtungen, Massnahmen und Verläufen."},
+          {term:"Aktivitäten des täglichen Lebens", definition:"Grundlegende Alltagshandlungen wie Körperpflege, Essen, Mobilität und Ausscheiden."}
+        ],
+        "HK A2: Kommunikation": [
+          {term:"4-Ohren-Modell", definition:"Kommunikationsmodell mit Sach-, Selbstoffenbarungs-, Beziehungs- und Appellseite."},
+          {term:"Empathie", definition:"Fähigkeit, sich in die Gefühle und Perspektive einer anderen Person hineinzuversetzen."},
+          {term:"Wertschätzung", definition:"Respektvolle und anerkennende Haltung gegenüber einer anderen Person."},
+          {term:"verbal", definition:"Kommunikation mit Worten, gesprochen oder geschrieben."},
+          {term:"nonverbal", definition:"Kommunikation ohne Worte, zum Beispiel über Mimik, Gestik und Körperhaltung."},
+          {term:"paraverbal", definition:"Stimmliche Anteile der Kommunikation wie Tonfall, Tempo und Lautstärke."},
+          {term:"Aktives Zuhören", definition:"Aufmerksames Zuhören mit Rückmeldungen, Nachfragen und Zusammenfassen."},
+          {term:"Paraphrasieren", definition:"Wiedergeben des Gehörten in eigenen Worten."}
+        ],
+        "HK B1: Körperpflege": [
+          {term:"Hautturgor", definition:"Spannungszustand der Haut; Hinweis auf den Flüssigkeitshaushalt."},
+          {term:"Exanthem", definition:"Akut auftretender Hautausschlag."},
+          {term:"Fissur", definition:"Schmaler, schlitzförmiger Einriss der Haut."},
+          {term:"Ulcus", definition:"Tiefer Gewebedefekt der Haut oder Schleimhaut mit schlechter Heilungstendenz."},
+          {term:"Aphte", definition:"Kleine, schmerzhafte Erosion der Mundschleimhaut."},
+          {term:"Dermatitis", definition:"Entzündliche Reaktion der Haut."},
+          {term:"Ekzem", definition:"Nicht infektiöse entzündliche Hauterkrankung mit Juckreiz, Rötung und Bläschen."},
+          {term:"Melanom", definition:"Bösartiger Tumor der pigmentbildenden Zellen der Haut."}
+        ],
+        "HK B2: Mobilität": [
+          {term:"Knochen", definition:"Stabile Teile des Skeletts, die den Körper stützen und schützen."},
+          {term:"Gelenke", definition:"Bewegliche Verbindungen zwischen zwei oder mehreren Knochen."},
+          {term:"Skelett", definition:"Knöchernes Gerüst des Körpers."},
+          {term:"Wirbelsäule", definition:"Zentrale Achse des Skeletts, die Rumpf und Rückenmark schützt."},
+          {term:"Femur", definition:"Oberschenkelknochen; längster Knochen des menschlichen Körpers."},
+          {term:"Patella", definition:"Kniescheibe."},
+          {term:"Tibia", definition:"Schienbein; stärkerer Knochen des Unterschenkels."},
+          {term:"Fibula", definition:"Wadenbein; dünnerer Knochen des Unterschenkels."},
+          {term:"Agonist", definition:"Muskel, der eine bestimmte Bewegung ausführt."},
+          {term:"Antagonist", definition:"Muskel, der der Bewegung des Agonisten entgegenwirkt."},
+          {term:"Mobilität", definition:"Fähigkeit, sich frei und gezielt zu bewegen."},
+          {term:"Immobilität", definition:"Unfähigkeit zur Bewegung oder stark eingeschränkte Bewegungsfähigkeit."},
+          {term:"Sturzprophylaxe", definition:"Massnahmen zur Vorbeugung von Stürzen."}
+        ],
+        "HK B5: Ernährung": [
+          {term:"Verdauungssystem", definition:"Alle Organe, die Aufnahme, Zerkleinerung und Verwertung der Nahrung ermöglichen."},
+          {term:"Peristaltik", definition:"Wellenförmige Muskelbewegung zur Fortbewegung von Nahrung im Verdauungstrakt."},
+          {term:"Trachea", definition:"Luftröhre."},
+          {term:"Ösophagus", definition:"Speiseröhre."},
+          {term:"Gaster", definition:"Magen."},
+          {term:"Hepar", definition:"Leber."},
+          {term:"Pankreas", definition:"Bauchspeicheldrüse; bildet Verdauungsenzyme und Hormone wie Insulin."},
+          {term:"Duodenum", definition:"Zwölffingerdarm; erster Abschnitt des Dünndarms."},
+          {term:"Resorption", definition:"Aufnahme von Nährstoffen aus dem Darm ins Blut."},
+          {term:"Adipositas", definition:"Starkes Übergewicht; Fettleibigkeit."},
+          {term:"Aspiration", definition:"Einatmen von Fremdstoffen wie Nahrung oder Flüssigkeit in die Atemwege."},
+          {term:"Malnutrition", definition:"Mangelernährung, qualitativ oder quantitativ."},
+          {term:"Dysphagie", definition:"Schluckstörung."}
+        ]
+      },
+      "Semester 2": {
+        "HK A3: Beobachtungen": [
+          {term:"Beobachtung", definition:"Bewusste und gezielte Wahrnehmung ohne sofortige Interpretation."},
+          {term:"Interpretation", definition:"Deutung und Bewertung einer Beobachtung."},
+          {term:"Wahrnehmung", definition:"Aufnahme und Verarbeitung von Sinnesreizen."},
+          {term:"Orientierung", definition:"Wissen über Person, Ort, Zeit und Situation."},
+          {term:"Orientierungsstörung", definition:"Beeinträchtigung der Orientierung zu Zeit, Ort, Person oder Situation."},
+          {term:"Gedächtnisstörung", definition:"Beeinträchtigung der Gedächtnisfunktionen."}
+        ],
+        "HK B2: Mobilität Erkrankungen": [
+          {term:"Arthrose", definition:"Degenerative Gelenkerkrankung mit Knorpelabbau."},
+          {term:"Rheumatoide Arthritis", definition:"Chronisch entzündliche Autoimmunerkrankung, die vor allem Gelenke betrifft."},
+          {term:"Deformation", definition:"Fehlbildung oder Verformung eines Körperteils oder Organs."},
+          {term:"Osteoporose", definition:"Knochenschwund mit verringerter Knochendichte und erhöhtem Frakturrisiko."},
+          {term:"Fraktur", definition:"Knochenbruch."},
+          {term:"Kontraktur", definition:"Dauerhafte Verkürzung von Muskeln, Sehnen oder Bändern mit Bewegungseinschränkung."}
+        ],
+        "HK E2: Hygiene": [
+          {term:"Kontamination", definition:"Verunreinigung mit Mikroorganismen oder Schadstoffen."},
+          {term:"Infektion", definition:"Eindringen und Vermehren von Krankheitserregern im Körper."},
+          {term:"Reinigung", definition:"Entfernung von Schmutz und Mikroorganismen, ohne diese gezielt abzutöten."},
+          {term:"Desinfektion", definition:"Gezielte Keimreduktion auf Haut, Flächen oder Gegenständen."},
+          {term:"Sterilisation", definition:"Verfahren zur vollständigen Keimfreiheit."},
+          {term:"Asepsis", definition:"Zustand der Keimfreiheit beziehungsweise keimarmes Arbeiten."},
+          {term:"Antisepsis", definition:"Keimreduktion auf lebendem Gewebe."}
+        ]
+      },
+      "Semester 3": {
+        "HK A1: Planung": [
+          {term:"Interdisziplinäre Zusammenarbeit", definition:"Zusammenarbeit von Fachpersonen verschiedener Disziplinen zur gemeinsamen Zielerreichung."},
+          {term:"Koordination", definition:"Abstimmen verschiedener Aktivitäten und Massnahmen."},
+          {term:"Rapport", definition:"Mündliche oder schriftliche Übergabe relevanter Informationen."},
+          {term:"Organigramm", definition:"Grafische Darstellung der Aufbauorganisation einer Institution."},
+          {term:"Funktionspflege", definition:"Pflegesystem, bei dem Pflegekräfte bestimmte Tätigkeiten bei mehreren Klienten ausführen."},
+          {term:"Bezugspflege", definition:"Pflegesystem, bei dem eine Pflegeperson für bestimmte Klienten besonders zuständig ist."}
+        ],
+        "HK C3: Herz-Kreislauf": [
+          {term:"Hypertonie", definition:"Bluthochdruck."},
+          {term:"Hypotonie", definition:"Zu niedriger Blutdruck."},
+          {term:"Myokardinfarkt", definition:"Herzinfarkt; Absterben von Herzmuskelgewebe durch Gefässverschluss."},
+          {term:"Aorta", definition:"Hauptschlagader des Körpers."},
+          {term:"Arterie", definition:"Blutgefäss, das Blut vom Herzen wegführt."},
+          {term:"Vene", definition:"Blutgefäss, das Blut zum Herzen hinführt."},
+          {term:"Kapillaren", definition:"Kleinste Blutgefässe, in denen Stoffaustausch stattfindet."}
+        ]
+      },
+      "Semester 4": {
+        "HK A4: Transkulturelle Pflege": [
+          {term:"Transkulturelle Pflege", definition:"Pflege, die kulturelle Unterschiede, Werte und Bedürfnisse berücksichtigt."},
+          {term:"Migration", definition:"Dauerhafter Wechsel des Wohnsitzes über Staatsgrenzen hinweg."},
+          {term:"Immigration", definition:"Einwanderung in ein neues Land."},
+          {term:"Integration", definition:"Einbindung von Menschen in die Gesellschaft des Aufnahmelandes."},
+          {term:"Multikulturalität", definition:"Zusammenleben von Menschen aus verschiedenen Kulturen."}
+        ],
+        "HK A5: Qualitätssicherung": [
+          {term:"Pflegeprozess", definition:"Systematischer Problemlösungsansatz der Pflege von Informationssammlung bis Evaluation."},
+          {term:"Pflegestandards", definition:"Definierte Normen und Richtlinien zur Sicherung professioneller Pflegequalität."},
+          {term:"Pflegediagnose", definition:"Klinische Beurteilung von Reaktionen auf aktuelle oder potenzielle Gesundheitsprobleme."},
+          {term:"Evaluation", definition:"Überprüfung, ob Ziele erreicht und Massnahmen wirksam waren."}
+        ],
+        "HK D7: Wundmanagement": [
+          {term:"Dekubitus", definition:"Druckgeschwür durch anhaltenden Druck und Minderdurchblutung."},
+          {term:"Ulcus cruris", definition:"Chronische Wunde am Unterschenkel."},
+          {term:"Gangrän", definition:"Absterben von Gewebe, häufig durch Durchblutungsstörung oder Infektion."},
+          {term:"Exsudat", definition:"Wundflüssigkeit, die aus einer Wunde austritt."},
+          {term:"Wundinfektion", definition:"Infektion einer Wunde mit typischen Zeichen wie Rötung, Schmerz, Wärme oder Eiter."}
+        ]
+      },
+      "Semester 5": {
+        "HK C1: Notfallsituationen": [
+          {term:"Alarmierungskonzept", definition:"Festgelegter Plan, wie und durch wen im Notfall alarmiert wird."},
+          {term:"Notfallnummern", definition:"Wichtige Telefonnummern für akute Notfälle, zum Beispiel 144."},
+          {term:"Herzstillstand", definition:"Plötzliches Aufhören der mechanischen Herzaktion."},
+          {term:"Hypovolämischer Schock", definition:"Lebensbedrohlicher Zustand durch massiven Flüssigkeits- oder Blutverlust."},
+          {term:"Hypoglykämie", definition:"Unterzuckerung; zu niedriger Blutzuckerspiegel."},
+          {term:"Hyperglykämie", definition:"Überzuckerung; zu hoher Blutzuckerspiegel."},
+          {term:"Aspiration", definition:"Einatmen von Fremdmaterial in die Atemwege."}
+        ],
+        "HK C3: Abhängigkeit": [
+          {term:"Abhängigkeit", definition:"Zustand mit Kontrollverlust, starkem Verlangen und Fortsetzen trotz schädlicher Folgen."},
+          {term:"Entzugssyndrom", definition:"Körperliche und psychische Symptome nach Reduktion oder Absetzen einer Substanz."},
+          {term:"Alkoholdelir", definition:"Schwerer Alkoholentzug mit Verwirrtheit, Halluzinationen und vegetativen Symptomen."},
+          {term:"Sedativa", definition:"Beruhigende Medikamente oder Substanzen."},
+          {term:"Stimulanzien", definition:"Anregende Substanzen, die Aktivität und Wachheit steigern."},
+          {term:"Halluzinogene", definition:"Substanzen, die Wahrnehmung und Bewusstsein verändern können."}
+        ],
+        "HK D4: Infusionen": [
+          {term:"Isotonische Lösung", definition:"Lösung mit gleichem osmotischem Druck wie Blutplasma."},
+          {term:"Hypotone Lösung", definition:"Lösung mit geringerem osmotischem Druck als Blutplasma."},
+          {term:"Hypertone Lösung", definition:"Lösung mit höherem osmotischem Druck als Blutplasma."},
+          {term:"Osmose", definition:"Bewegung von Wasser durch eine semipermeable Membran zur höheren Teilchenkonzentration."},
+          {term:"Diffusion", definition:"Bewegung von Teilchen von hoher zu niedriger Konzentration."},
+          {term:"Phlebitis", definition:"Venenentzündung, häufig als Komplikation bei venösen Zugängen."}
+        ]
+      },
+      "Semester 6": {
+        "HK F3: Sexualität": [
+          {term:"Chlamydien", definition:"Bakterielle sexuell übertragbare Infektion."},
+          {term:"Gonorrhö", definition:"Tripper; bakterielle sexuell übertragbare Infektion durch Gonokokken."},
+          {term:"HIV", definition:"Virus, das Zellen des Immunsystems befällt."},
+          {term:"AIDS", definition:"Fortgeschrittenes Stadium einer HIV-Infektion mit schweren Infektionen oder Tumoren."},
+          {term:"Antibiotika", definition:"Medikamente gegen bakterielle Infektionen."},
+          {term:"Virostatika", definition:"Medikamente, die die Vermehrung von Viren hemmen."},
+          {term:"Ping-Pong-Effekt", definition:"Gegenseitige Wiederansteckung von Sexualpartnern, wenn nicht beide behandelt werden."},
+          {term:"T-Lymphozyten", definition:"Weisse Blutkörperchen, die bei der Steuerung der Immunabwehr wichtig sind."}
+        ]
+      }
+    };
+
+    let termsBySemester = structuredClone(DEFAULT_TERMS_BY_SEMESTER);
+    let importedDataset = false;
+    const API_BASE = 'https://fage-highscore-api.domi-jufer.workers.dev';
+    const GAME_NAME = 'fage-snake';
+    const NICK_KEY = 'fage-snake-locked-nickname-v2';
+
+    const canvas = document.getElementById('gameCanvas');
+    const stage = document.getElementById('stage');
+    const ctx = canvas.getContext('2d');
+    const semesterSelect = document.getElementById('semesterSelect');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const playAgainBtn = document.getElementById('playAgainBtn');
+    const showScoresAfterGameBtn = document.getElementById('showScoresAfterGameBtn');
+    const scoreValue = document.getElementById('scoreValue');
+    const lengthValue = document.getElementById('lengthValue');
+    const dataCountValue = document.getElementById('dataCountValue');
+    const targetCategoryEl = document.getElementById('targetCategory');
+    const optionAText = document.getElementById('optionAText');
+    const optionBText = document.getElementById('optionBText');
+    const optionAChip = document.getElementById('optionAChip');
+    const optionBChip = document.getElementById('optionBChip');
+    const startHint = document.getElementById('startHint');
+    const gameOverOverlay = document.getElementById('gameOverOverlay');
+    const finalScoreText = document.getElementById('finalScoreText');
+    const highscoreDock = document.getElementById('highscoreDock');
+    const toggleHighscores = document.getElementById('toggleHighscores');
+    const bestScoreText = document.getElementById('bestScoreText');
+    const scoreList = document.getElementById('scoreList');
+    const nicknameInput = document.getElementById('nicknameInput');
+    const saveScoreBtn = document.getElementById('saveScoreBtn');
+    const highscoreStatus = document.getElementById('highscoreStatus');
+    const importDataBtn = document.getElementById('importDataBtn');
+    const basisAppFile = document.getElementById('basisAppFile');
+    const dataSourceText = document.getElementById('dataSourceText');
+
+    const COLS = 26;
+    const ROWS = 18;
+    const BASE_TICK_MS = 132;
+    const MIN_TICK_MS = 70;
+
+    let dpr = 1;
+    let view = {w:1,h:1,cell:20,ox:0,oy:0,bw:1,bh:1};
+    let allTerms = [];
+    let activePool = [];
+    let currentChallenge = null;
+    let goodTerm = '–';
+    let badTerm = '–';
+    let answerFoods = [];
+    let snake = [];
+    let direction = {x:1,y:0};
+    let queuedDirection = {x:1,y:0};
+    let moving = false;
+    let playing = false;
+    let targetLength = 1;
+    let score = 0;
+    let pendingScore = 0;
+    let canSaveScore = false;
+    let goodFood = {x:5,y:5};
+    let badFood = {x:15,y:8};
+    let particles = [];
+    let lastFrame = performance.now();
+    let tickAccumulator = 0;
+    let touchStart = null;
+    let scoresCache = [];
+
+    const bannedFragments = [
+      'fuck','shit','bitch','asshole','cunt','dick','pussy','bastard','wanker',
+      'arsch','arschloch','scheiss','scheisse','fick','fotze','wichser','hurensohn','hure','nutte','idiot',
+      'nazi','hitler','admin','moderator'
+    ];
+
+    // Nur kräftige, gut unterscheidbare Farben. Jede Farbe gehört zu einer Farbfamilie.
+    // Beim Auswählen werden immer zwei unterschiedliche Farbfamilien kombiniert,
+    // damit z.B. Hellblau/Dunkelblau nicht gleichzeitig auftreten kann.
+    const FOOD_COLOR_GROUPS = [
+      {family:'red', colors:['#E53935','#C62828']},
+      {family:'blue', colors:['#1565C0','#0D47A1']},
+      {family:'green', colors:['#00897B','#00695C']},
+      {family:'purple', colors:['#7B1FA2','#512DA8']},
+      {family:'orange', colors:['#EF6C00','#D84315']},
+      {family:'yellow', colors:['#F9A825','#F57F17']},
+      {family:'pink', colors:['#C2185B','#AD1457']},
+      {family:'cyan', colors:['#00838F','#006064']}
+    ];
+    function pickTwoColors(){
+      const groups = [...FOOD_COLOR_GROUPS].sort(() => Math.random() - .5);
+      const pick = group => group.colors[Math.floor(Math.random() * group.colors.length)];
+      return [pick(groups[0]), pick(groups[1])];
+    }
+
+    function flattenTermRows(source = termsBySemester){
+      const rows = [];
+      Object.entries(source || {}).forEach(([semester,hks]) => {
+        Object.entries(hks || {}).forEach(([hk,items]) => {
+          (items || []).forEach(item => {
+            if(!item) return;
+            const term = String(item.term || '').trim();
+            const definition = String(item.definition || item.translation || item.übersetzung || item.uebersetzung || '').trim();
+            if(term && definition) rows.push({semester, hk, term, definition});
+          });
+        });
+      });
+      return rows;
+    }
+    function rand(max){ return Math.floor(Math.random()*max); }
+    function randomFrom(arr){ return arr[rand(arr.length)]; }
+    function sameCell(a,b){ return a && b && a.x===b.x && a.y===b.y; }
+    function isOnSnake(pos){ return snake.some(s => sameCell(s,pos)); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+
+    function updateDataStats(){
+      allTerms = flattenTermRows();
+      const hkCount = new Set(allTerms.map(t => `${t.semester}|||${t.hk}`)).size;
+      if(dataCountValue) dataCountValue.textContent = String(allTerms.length);
+      if(dataSourceText){
+        dataSourceText.textContent = `Datensatz: ${allTerms.length} Einträge · ${hkCount} HK.`;
+      }
+    }
+
+    function populateSemesterSelect(keepValue){
+      const previous = keepValue || semesterSelect.value || 'Alle Semester';
+      const options = ['Alle Semester', ...Object.keys(termsBySemester || {})];
+      semesterSelect.innerHTML = options.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+      semesterSelect.value = options.includes(previous) ? previous : 'Alle Semester';
+      updateDataStats();
+      setActiveSemester();
+    }
+
+    function setActiveSemester(){
+      const selected = semesterSelect.value;
+      allTerms = flattenTermRows();
+      activePool = allTerms.filter(t => selected === 'Alle Semester' || t.semester === selected);
+      if(activePool.length < 2) activePool = allTerms.slice();
+      chooseChallenge();
+    }
+
+    function setOptionChipColor(el, color){
+      if(!el) return;
+      el.style.setProperty('--chip-color', color);
+      el.style.setProperty('--chip-text', shadeColor(color, -38));
+    }
+
+    function chooseChallenge(){
+      if(!activePool.length){
+        currentChallenge = null;
+        targetCategoryEl.textContent = 'Keine Einträge mit Definitionen gefunden. Wähle ein anderes Semester.';
+        optionAText.textContent = '–'; optionBText.textContent = '–'; setOptionChipColor(optionAChip, '#5bb8ff'); setOptionChipColor(optionBChip, '#57d9aa'); answerFoods = [];
+        return;
+      }
+      currentChallenge = randomFrom(activePool);
+      goodTerm = currentChallenge.term;
+      const wrongPool = activePool.filter(t => t.term !== currentChallenge.term);
+      const sameHK = wrongPool.filter(t => t.hk === currentChallenge.hk);
+      const sameSemester = wrongPool.filter(t => t.semester === currentChallenge.semester);
+      const wrong = randomFrom(sameHK.length ? sameHK : (sameSemester.length ? sameSemester : wrongPool));
+      badTerm = wrong.term;
+      const [c1, c2] = pickTwoColors();
+      const shuffled = [
+        {term: goodTerm, correct: true, color: c1},
+        {term: badTerm, correct: false, color: c2}
+      ].sort(() => Math.random() - .5).map((item, index) => ({...item, key: index === 0 ? 'A' : 'B'}));
+      targetCategoryEl.textContent = currentChallenge.definition;
+      optionAText.textContent = shuffled[0].term;
+      optionBText.textContent = shuffled[1].term;
+      setOptionChipColor(optionAChip, shuffled[0].color);
+      setOptionChipColor(optionBChip, shuffled[1].color);
+      answerFoods = shuffled;
+    }
+
+    function extractObjectLiteral(text, varName){
+      const re = new RegExp('(?:const|let|var)\\s+'+varName+'\\s*=\\s*\\{');
+      const m = re.exec(text);
+      if(!m) return null;
+      let start = m.index + m[0].lastIndexOf('{');
+      let depth = 0, quote = null, escape = false;
+      for(let i=start;i<text.length;i++){
+        const ch = text[i];
+        if(quote){
+          if(escape){ escape = false; continue; }
+          if(ch === '\\'){ escape = true; continue; }
+          if(ch === quote){ quote = null; }
+          continue;
+        }
+        if(ch === '"' || ch === "'" || ch === '`'){ quote = ch; continue; }
+        if(ch === '{') depth++;
+        if(ch === '}'){
+          depth--;
+          if(depth === 0) return text.slice(start, i+1);
+        }
+      }
+      return null;
+    }
+
+    function validateDataset(obj){
+      const rows = flattenTermRows(obj);
+      return {ok: rows.length >= 10, rows};
+    }
+
+    async function importBasisAppFile(file){
+      if(!file) return;
+      try{
+        const text = await file.text();
+        const literal = extractObjectLiteral(text, 'termsBySemester');
+        if(!literal) throw new Error('Kein termsBySemester-Datensatz gefunden.');
+        const parsed = Function(`"use strict"; return (${literal});`)();
+        const check = validateDataset(parsed);
+        if(!check.ok) throw new Error('Datensatz gefunden, aber zu wenige gültige term/definition-Einträge.');
+        termsBySemester = parsed;
+        importedDataset = true;
+        populateSemesterSelect('Alle Semester');
+        resetGame(false);
+        toast(`Basisapp geladen: ${check.rows.length} Begriffe`);
+      }catch(err){
+        toast('Import fehlgeschlagen: ' + (err.message || 'unbekannter Fehler'));
+      }finally{
+        basisAppFile.value = '';
+      }
+    }
+
+    function resizeCanvas(){
+      dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
+      const rect = stage.getBoundingClientRect();
+      canvas.width = Math.max(320, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(300, Math.floor(rect.height * dpr));
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      const w = rect.width;
+      const h = rect.height;
+      const cell = Math.floor(Math.min((w-28)/COLS, (h-28)/ROWS));
+      view.cell = Math.max(10, cell);
+      view.bw = view.cell * COLS;
+      view.bh = view.cell * ROWS;
+      view.ox = Math.round((w-view.bw)/2);
+      view.oy = Math.round((h-view.bh)/2);
+      view.w = w; view.h = h;
+    }
+
+    function cellCenter(pos){ return {x:view.ox+pos.x*view.cell+view.cell/2,y:view.oy+pos.y*view.cell+view.cell/2}; }
+    function placeFood(other){
+      let pos, guard=0;
+      do { pos={x:rand(COLS),y:rand(ROWS)}; guard++; } while((isOnSnake(pos)||sameCell(pos,other)) && guard<5000);
+      return pos;
+    }
+
+    function positionAnswers(){
+      if(!answerFoods.length) chooseChallenge();
+      const first = placeFood(null);
+      const second = placeFood(first);
+      if(answerFoods[0]) answerFoods[0].pos = first;
+      if(answerFoods[1]) answerFoods[1].pos = second;
+      const correct = answerFoods.find(a => a.correct);
+      const wrong = answerFoods.find(a => !a.correct);
+      if(correct) goodFood = correct.pos;
+      if(wrong) badFood = wrong.pos;
+    }
+
+    function resetGame(autoStart=false){
+      setActiveSemester();
+      snake = [{x:Math.floor(COLS/2), y:Math.floor(ROWS/2)}];
+      direction={x:1,y:0}; queuedDirection={x:1,y:0};
+      moving=false; playing=!!autoStart;
+      targetLength=1; score=0; pendingScore=0; canSaveScore=false;
+      particles=[]; tickAccumulator=0;
+      positionAnswers();
+      updateUI();
+      saveScoreBtn.disabled = true;
+      gameOverOverlay.classList.add('hidden');
+      startHint.classList.toggle('hidden', autoStart);
+      startBtn.textContent = autoStart ? 'Läuft' : 'Start';
+      toast(autoStart ? 'Los!' : 'Zurückgesetzt');
+    }
+
+    function startGame(){
+      if(!playing) resetGame(true);
+      else { moving = true; startHint.classList.add('hidden'); }
+    }
+
+    function updateUI(){
+      scoreValue.textContent = String(score);
+      lengthValue.textContent = String(targetLength);
+    }
+
+    function setDirection(next){
+      if(!playing) return;
+      const reverse = next.x === -direction.x && next.y === -direction.y;
+      if(reverse && snake.length > 1) return;
+      queuedDirection = next; moving = true; startHint.classList.add('hidden');
+    }
+
+    function updateGame(){
+      if(!playing || !moving) return;
+      direction = queuedDirection;
+      const head = snake[snake.length-1];
+      const next = {x:head.x+direction.x, y:head.y+direction.y};
+      if(next.x<0 || next.x>=COLS || next.y<0 || next.y>=ROWS){ endGame(next); return; }
+      const eatenAnswer = answerFoods.find(a => sameCell(next, a.pos));
+      const body = eatenAnswer && eatenAnswer.correct ? snake : snake.slice(1);
+      if(body.some(s => sameCell(s,next))){ endGame(next); return; }
+      snake.push(next);
+      if(eatenAnswer?.correct){
+        targetLength++;
+        score += 10 + Math.min(15, targetLength);
+        emitBurst(next, eatenAnswer.color, 34, 1.05);
+        toast('Richtig: ' + eatenAnswer.term);
+        chooseChallenge(); positionAnswers();
+      } else if(eatenAnswer){
+        score = Math.max(0, score - 8);
+        emitBurst(next, eatenAnswer.color, 26, .9);
+        toast('Falsch: ' + eatenAnswer.term);
+        if(targetLength > 1){ targetLength--; if(snake.length>1) snake.shift(); }
+        chooseChallenge(); positionAnswers();
+      }
+      while(snake.length > targetLength) snake.shift();
+      updateUI();
+    }
+
+    function endGame(cell){
+      playing=false; moving=false;
+      pendingScore = Math.max(0, score);
+      canSaveScore = pendingScore > 0;
+      saveScoreBtn.disabled = !canSaveScore;
+      finalScoreText.textContent = String(pendingScore);
+      updateUI();
+      gameOverOverlay.classList.remove('hidden');
+      highscoreDock.classList.add('open'); toggleHighscores.textContent='−';
+      emitBurst(cell || snake[snake.length-1], '#ff7d76', 68, 1.3);
+      setStatus(canSaveScore ? 'Score kann gespeichert werden.' : 'Score 0 kann nicht gespeichert werden.', canSaveScore ? 'ok':'error');
+    }
+
+    function updateParticles(dt){
+      const s = dt/1000;
+      particles = particles.filter(p => {
+        p.life -= s; p.x += p.vx*s; p.y += p.vy*s; p.vy += 360*s; p.vx *= Math.pow(.18, s);
+        return p.life > 0;
+      });
+    }
+    function emitBurst(cell,color,amount,power){
+      const c = cellCenter({x:Math.max(0,Math.min(COLS-1,cell.x)),y:Math.max(0,Math.min(ROWS-1,cell.y))});
+      const rect = canvas.getBoundingClientRect();
+      for(let i=0;i<amount;i++){
+        const a=Math.random()*Math.PI*2, sp=(55+Math.random()*220)*power;
+        particles.push({x:c.x,y:c.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:.55+Math.random()*.65,maxLife:1.2,radius:2+Math.random()*4,color});
+        if(i<10) domParticle(rect.left+c.x, rect.top+c.y, color);
+      }
+    }
+    function domParticle(x,y,color){
+      const p=document.createElement('span'); p.className='particle'; p.style.left=x+'px'; p.style.top=y+'px'; p.style.background=color; p.style.color=color;
+      p.style.setProperty('--x', (Math.random()*140-70)+'px'); p.style.setProperty('--y', (Math.random()*-120-20)+'px');
+      document.body.appendChild(p); setTimeout(()=>p.remove(),800);
+    }
+    function toast(text){
+      const t=document.createElement('div'); t.className='toast'; t.textContent=text; document.body.appendChild(t); setTimeout(()=>t.remove(),1050);
+    }
+
+    function drawBackground(time){
+      ctx.clearRect(0,0,view.w,view.h);
+      const g=ctx.createLinearGradient(0,0,0,view.h); g.addColorStop(0,'#e8f8ff'); g.addColorStop(.55,'#f9fdff'); g.addColorStop(1,'#fff6df'); ctx.fillStyle=g; ctx.fillRect(0,0,view.w,view.h);
+      ctx.save(); ctx.translate(view.ox,view.oy);
+      ctx.fillStyle='rgba(255,255,255,.7)'; ctx.strokeStyle='rgba(99,164,204,.16)'; ctx.lineWidth=1;
+      for(let y=0;y<ROWS;y++){ for(let x=0;x<COLS;x++){
+        const xx=x*view.cell, yy=y*view.cell; ctx.fillStyle=(x+y)%2?'rgba(255,255,255,.48)':'rgba(208,239,255,.42)';
+        roundRect(ctx,xx+1,yy+1,view.cell-2,view.cell-2,Math.max(3,view.cell*.18)); ctx.fill();
+      }}
+      ctx.strokeStyle='rgba(46,134,222,.18)'; ctx.lineWidth=2; roundRect(ctx,0,0,view.bw,view.bh,18); ctx.stroke();
+      ctx.restore();
+    }
+    function roundRect(ctx,x,y,w,h,r){
+      r=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+    }
+    function drawFood(answer,time){
+      if(!answer || !answer.pos) return;
+      const pos = answer.pos, color = answer.color;
+      const c=cellCenter(pos);
+      const pulse=(Math.sin(time/220 + pos.x)+1)/2;
+      const r=view.cell*(.46+pulse*.08);
+      ctx.save();
+      ctx.shadowColor=color; ctx.shadowBlur=22+10*pulse;
+      ctx.lineWidth=Math.max(3, view.cell*.12);
+      ctx.strokeStyle='rgba(255,255,255,.95)';
+      const grad=ctx.createRadialGradient(c.x-r*.35,c.y-r*.45,r*.1,c.x,c.y,r*1.25);
+      grad.addColorStop(0,'#ffffff'); grad.addColorStop(.22,color); grad.addColorStop(1, shadeColor(color,-36));
+      ctx.fillStyle=grad;
+      ctx.beginPath(); ctx.ellipse(c.x,c.y-r*.07,r,r*.86,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.82)'; ctx.beginPath(); ctx.ellipse(c.x-r*.28,c.y-r*.40,r*.22,r*.12,-.5,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.strokeStyle='rgba(255,255,255,.9)';
+      ctx.lineWidth=Math.max(2, view.cell*.08);
+      ctx.beginPath(); ctx.ellipse(c.x,c.y-r*.07,r*.64,r*.52,0,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+
+    function shadeColor(hex, percent){
+      const n=parseInt(hex.replace('#',''),16);
+      let r=(n>>16)+percent, g=(n>>8&255)+percent, b=(n&255)+percent;
+      r=Math.max(0,Math.min(255,r)); g=Math.max(0,Math.min(255,g)); b=Math.max(0,Math.min(255,b));
+      return '#' + (b | (g<<8) | (r<<16) | 0x1000000).toString(16).slice(1);
+    }
+
+    function drawFloatingLabel(x,y,text,color){
+      const maxW=Math.min(150, view.cell*6.4); const short=String(text).length>22?String(text).slice(0,21)+'…':String(text);
+      ctx.font=`800 ${Math.max(10,view.cell*.34)}px system-ui`;
+      const w=Math.min(maxW, ctx.measureText(short).width+18); const h=Math.max(22,view.cell*.72);
+      let xx=Math.max(view.ox+4, Math.min(view.ox+view.bw-w-4, x-w/2)); let yy=Math.max(view.oy+4, Math.min(view.oy+view.bh-h-4, y));
+      ctx.fillStyle='rgba(255,255,255,.92)'; ctx.strokeStyle=color; ctx.lineWidth=2; roundRect(ctx,xx,yy,w,h,12); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#173b56'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(short,xx+w/2,yy+h/2+1);
+    }
+    function drawSnake(time){
+      snake.forEach((seg,i)=>{
+        const c=cellCenter(seg); const isHead=i===snake.length-1; const r=view.cell*(isHead?.48:.42); const hue=150 - i*1.8;
+        ctx.save(); ctx.translate(c.x,c.y);
+        ctx.shadowColor='rgba(17,165,121,.35)'; ctx.shadowBlur=isHead?18:10;
+        const grad=ctx.createRadialGradient(-r*.35,-r*.45,r*.1,0,0,r*1.1); grad.addColorStop(0,'#fff'); grad.addColorStop(.18,'#a9ffe0'); grad.addColorStop(.58,`hsl(${hue} 74% 48%)`); grad.addColorStop(1,`hsl(${hue} 78% 28%)`);
+        ctx.fillStyle=grad; ctx.beginPath(); ctx.ellipse(0,-r*.12,r,r*.82,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,.65)'; ctx.beginPath(); ctx.ellipse(-r*.28,-r*.42,r*.22,r*.12,-.5,0,Math.PI*2); ctx.fill();
+        if(isHead){
+          ctx.fillStyle='#123'; const ex=direction.x!==0?direction.x*r*.25:r*.25; const ey=direction.y!==0?direction.y*r*.2:-r*.18;
+          ctx.beginPath(); ctx.arc(-r*.25+ex*.15, ey, Math.max(2,r*.08),0,Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(r*.25+ex*.15, ey, Math.max(2,r*.08),0,Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+      });
+    }
+    function drawParticles(){
+      for(const p of particles){
+        const a=Math.max(0,p.life/p.maxLife); ctx.save(); ctx.globalAlpha=Math.min(1,a*1.6); ctx.fillStyle=p.color; ctx.shadowColor=p.color; ctx.shadowBlur=12; ctx.beginPath(); ctx.arc(p.x,p.y,p.radius*a,0,Math.PI*2); ctx.fill(); ctx.restore();
+      }
+    }
+    function render(time){
+      drawBackground(time); answerFoods.forEach(a => drawFood(a,time)); drawSnake(time); drawParticles();
+    }
+    function loop(now){
+      const dt=Math.min(48, now-lastFrame); lastFrame=now; tickAccumulator += dt;
+      const tickMs=Math.max(MIN_TICK_MS, BASE_TICK_MS - Math.max(0,targetLength-1)*2.2);
+      while(tickAccumulator>=tickMs){ updateGame(); tickAccumulator-=tickMs; }
+      updateParticles(dt); render(now); requestAnimationFrame(loop);
+    }
+
+    function normaliseForFilter(value){ return String(value||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[0]/g,'o').replace(/[1!|]/g,'i').replace(/[3]/g,'e').replace(/[4@]/g,'a').replace(/[5$]/g,'s').replace(/[7]/g,'t').replace(/[^a-z0-9]/g,''); }
+    function validateNickname(raw){
+      const name=String(raw||'').trim().replace(/\s+/g,' ');
+      if(name.length<2 || name.length>18) return {ok:false,message:'Nickname muss 2–18 Zeichen lang sein.'};
+      if(!/^[a-zA-Z0-9 äöüÄÖÜéèàÉÈÀ._-]+$/.test(name)) return {ok:false,message:'Nur Buchstaben, Zahlen, Leerzeichen, Punkt, Bindestrich und Unterstrich.'};
+      if(/https?:\/\//i.test(name)||/www\./i.test(name)||/\.[a-z]{2,}/i.test(name)||/\S+@\S+\.\S+/.test(name)) return {ok:false,message:'Links und E-Mail-Adressen sind nicht erlaubt.'};
+      const compact=normaliseForFilter(name);
+      if(bannedFragments.some(w => compact.includes(normaliseForFilter(w)))) return {ok:false,message:'Dieser Nickname ist nicht erlaubt.'};
+      return {ok:true,name};
+    }
+    function getLockedNickname(){ try{return localStorage.getItem(NICK_KEY)||''}catch{return ''} }
+    function lockNickname(name){ try{localStorage.setItem(NICK_KEY,name)}catch{} applyNicknameLock(); }
+    function applyNicknameLock(){
+      const locked=getLockedNickname();
+      if(locked){ nicknameInput.value=locked; nicknameInput.disabled=true; nicknameInput.title='Nickname ist auf diesem Gerät gesperrt. Zum Ändern lokale Website-Daten löschen.'; setStatus('Nickname ist auf diesem Gerät gesperrt. Zum Ändern lokale Website-Daten löschen.','ok'); }
+    }
+    function setStatus(message,type){ highscoreStatus.textContent=message||''; highscoreStatus.className='miniStatus'+(type?' '+type:''); }
+    async function loadScores(){
+      try{
+        const res=await fetch(`${API_BASE}/scores?game=${encodeURIComponent(GAME_NAME)}&limit=20`,{cache:'no-store'});
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const data=await res.json(); const list=Array.isArray(data.scores)?data.scores:[];
+        scoresCache=list.slice(0,20).map(item=>({name:String(item.name||'Unbekannt').slice(0,24),score:Number(item.score)||0,created_at:item.created_at||''}));
+        renderScores(); setStatus('', '');
+      }catch(e){
+        bestScoreText.textContent='Online-Highscore nicht erreichbar';
+        scoreList.innerHTML='<li><span class="rank">!</span><span class="name">Worker /scores nicht erreichbar</span><span class="pts">–</span></li>';
+        setStatus('Highscore konnte nicht geladen werden. Prüfe Worker, CORS oder Route /scores.','error');
+      }
+    }
+    function renderScores(){
+      if(!scoresCache.length){ bestScoreText.textContent='Noch kein Score'; scoreList.innerHTML='<li><span class="rank">–</span><span class="name">Noch kein Eintrag</span><span class="pts">–</span></li>'; return; }
+      const best=scoresCache[0]; bestScoreText.textContent=`${best.name} · ${best.score}`;
+      scoreList.innerHTML=scoresCache.map((item,i)=>`<li><span class="rank">${i+1}.</span><span class="name"></span><span class="pts">${item.score}</span></li>`).join('');
+      scoreList.querySelectorAll('.name').forEach((el,i)=>el.textContent=scoresCache[i].name);
+    }
+    async function saveScore(){
+      if(!canSaveScore || pendingScore<=0){ setStatus('Kein speicherbarer Score vorhanden.','error'); return; }
+      const locked=getLockedNickname(); const validation=locked?{ok:true,name:locked}:validateNickname(nicknameInput.value);
+      if(!validation.ok){ setStatus(validation.message,'error'); return; }
+      saveScoreBtn.disabled=true; saveScoreBtn.textContent='Speichert…'; setStatus('Score wird gespeichert…','');
+      try{
+        const res=await fetch(`${API_BASE}/score`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:GAME_NAME,name:validation.name,score:pendingScore})});
+        const data=await res.json().catch(()=>({}));
+        if(!res.ok || data.ok===false) throw new Error(data.error || ('HTTP '+res.status));
+        if(!locked) lockNickname(validation.name);
+        pendingScore=0; canSaveScore=false; finalScoreText.textContent='0'; score=0; updateUI();
+        setStatus('Gespeichert. Score wurde zurückgesetzt.','ok'); await loadScores();
+      }catch(e){ canSaveScore=pendingScore>0; saveScoreBtn.disabled=!canSaveScore; setStatus('Speichern fehlgeschlagen: '+(e.message||'unbekannter Fehler'),'error'); }
+      finally{ saveScoreBtn.textContent='Score speichern'; }
+    }
+    function toggleScores(force){ const open=typeof force==='boolean'?force:!highscoreDock.classList.contains('open'); highscoreDock.classList.toggle('open',open); toggleHighscores.textContent=open?'−':'+'; }
+
+    if(importDataBtn && basisAppFile){
+      importDataBtn.addEventListener('click', () => basisAppFile.click());
+      basisAppFile.addEventListener('change', e => importBasisAppFile(e.target.files && e.target.files[0]));
+    }
+    semesterSelect.addEventListener('change', () => resetGame(false));
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', () => resetGame(true));
+    playAgainBtn.addEventListener('click', () => resetGame(true));
+    showScoresAfterGameBtn.addEventListener('click', () => { gameOverOverlay.classList.add('hidden'); toggleScores(true); });
+    toggleHighscores.addEventListener('click', () => toggleScores());
+    saveScoreBtn.addEventListener('click', saveScore);
+
+    document.addEventListener('keydown', e => {
+      const key=e.key.toLowerCase();
+      if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' '].includes(key)) e.preventDefault();
+      if(key==='arrowleft'||key==='a') setDirection({x:-1,y:0});
+      else if(key==='arrowright'||key==='d') setDirection({x:1,y:0});
+      else if(key==='arrowup'||key==='w') setDirection({x:0,y:-1});
+      else if(key==='arrowdown'||key==='s') setDirection({x:0,y:1});
+      else if(key===' ') startGame();
+    }, {passive:false});
+    canvas.addEventListener('touchstart', e => { const t=e.changedTouches[0]; touchStart={x:t.clientX,y:t.clientY}; e.preventDefault(); }, {passive:false});
+    canvas.addEventListener('touchmove', e => e.preventDefault(), {passive:false});
+    canvas.addEventListener('touchend', e => {
+      if(!touchStart) return; const t=e.changedTouches[0]; const dx=t.clientX-touchStart.x; const dy=t.clientY-touchStart.y; touchStart=null;
+      if(Math.max(Math.abs(dx),Math.abs(dy))<22) return;
+      if(Math.abs(dx)>Math.abs(dy)) setDirection({x:dx>0?1:-1,y:0}); else setDirection({x:0,y:dy>0?1:-1});
+      e.preventDefault();
+    }, {passive:false});
+    canvas.addEventListener('pointerdown', () => { if(!playing) startGame(); });
+    function handlePadDirection(dir){
+      if(dir==='left') setDirection({x:-1,y:0});
+      else if(dir==='right') setDirection({x:1,y:0});
+      else if(dir==='up') setDirection({x:0,y:-1});
+      else if(dir==='down') setDirection({x:0,y:1});
+    }
+    document.querySelectorAll('.padBtn').forEach(btn => {
+      const press = e => { e.preventDefault(); if(!playing) startGame(); handlePadDirection(btn.dataset.dir); btn.classList.add('active'); };
+      const release = () => btn.classList.remove('active');
+      btn.addEventListener('pointerdown', press);
+      btn.addEventListener('pointerup', release);
+      btn.addEventListener('pointercancel', release);
+      btn.addEventListener('pointerleave', release);
+    });
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('orientationchange', () => setTimeout(resizeCanvas,160));
+
+    populateSemesterSelect();
+    resizeCanvas();
+    resetGame(false);
+    applyNicknameLock();
+    loadScores();
+    requestAnimationFrame(loop);
+  })();
+  </script>
+</body>
+</html>
