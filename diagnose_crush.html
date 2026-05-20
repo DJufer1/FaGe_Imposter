@@ -271,6 +271,19 @@
       margin:-3px 4px 0;
     }
 
+    .nickname-note.locked{
+      color:#7dffdc;
+      font-weight:800;
+    }
+
+    .highscore-save input:disabled{
+      color:#7dffdc;
+      opacity:1;
+      cursor:not-allowed;
+      border-color:rgba(125,255,220,.42);
+      background:#0b1115;
+    }
+
     .mini-btn{
       border:0;
       border-radius:999px;
@@ -877,7 +890,7 @@
             </div>
             <div class="highscore-save">
               <input id="playerNameInput" type="text" maxlength="18" placeholder="Nickname (wird öffentlich angezeigt)" autocomplete="nickname" />
-              <small class="nickname-note">2–18 Zeichen. Beleidigende oder ungeeignete Nicknames werden blockiert.</small>
+              <small class="nickname-note" id="nicknameNote">2–18 Zeichen. Beleidigende oder ungeeignete Nicknames werden blockiert.</small>
               <button class="mini-btn" id="saveScoreBtn" type="button">Score speichern</button>
             </div>
             <div class="highscore-list" id="highscoreList">
@@ -1714,6 +1727,7 @@
     const highscoreStatusEl = document.getElementById("highscoreStatus");
     const saveScoreBtn = document.getElementById("saveScoreBtn");
     const playerNameInput = document.getElementById("playerNameInput");
+    const nicknameNote = document.getElementById("nicknameNote");
 
     let board = [];
     let targetCategory = "";
@@ -2222,6 +2236,38 @@
       `).join("");
     }
 
+    function getLockedNickname(){
+      return localStorage.getItem("diagnoseCrushLockedNickname") || "";
+    }
+
+    function lockNickname(name){
+      localStorage.setItem("diagnoseCrushLockedNickname", name);
+      localStorage.setItem("diagnoseCrushPlayerName", name);
+      applyLockedNickname();
+    }
+
+    function applyLockedNickname(){
+      const lockedName = getLockedNickname();
+      if(!playerNameInput) return;
+
+      if(lockedName){
+        playerNameInput.value = lockedName;
+        playerNameInput.disabled = true;
+        playerNameInput.title = "Nickname ist auf diesem Gerät gespeichert. Zum Ändern lokale Browserdaten/Website-Daten löschen.";
+        if(nicknameNote){
+          nicknameNote.textContent = "Nickname ist auf diesem Gerät gesperrt. Ändern nur durch Löschen der lokalen Website-Daten möglich.";
+          nicknameNote.classList.add("locked");
+        }
+      }else{
+        playerNameInput.disabled = false;
+        playerNameInput.title = "";
+        if(nicknameNote){
+          nicknameNote.textContent = "2–18 Zeichen. Beleidigende oder ungeeignete Nicknames werden blockiert.";
+          nicknameNote.classList.remove("locked");
+        }
+      }
+    }
+
     const BLOCKED_NICKNAME_PARTS = [
       "admin","administrator","moderator","system","chatgpt","openai",
       "hitler","nazi","n4zi","nsdap","holocaust",
@@ -2269,18 +2315,25 @@
     }
 
     async function saveCurrentHighscore(){
-      const validation = validateNickname(playerNameInput?.value || "");
-      if(!validation.ok){
-        showToast(validation.message);
-        playerNameInput?.focus();
-        return;
+      const lockedName = getLockedNickname();
+      let name = lockedName;
+
+      if(!name){
+        const validation = validateNickname(playerNameInput?.value || "");
+        if(!validation.ok){
+          showToast(validation.message);
+          playerNameInput?.focus();
+          return;
+        }
+        name = validation.name;
       }
-      const name = validation.name;
 
       if(!Number.isFinite(score) || score <= 0){
         showToast("Noch keine Punkte");
         return;
       }
+
+      const scoreToSave = score;
 
       try{
         saveScoreBtn.disabled = true;
@@ -2293,15 +2346,31 @@
           body:JSON.stringify({
             game:GAME_NAME,
             name:name,
-            score:score
+            score:scoreToSave
           })
         });
 
         if(!response.ok) throw new Error(`HTTP ${response.status}`);
         await response.json();
 
-        localStorage.setItem("diagnoseCrushPlayerName", name);
-        showToast("Gespeichert!");
+        lockNickname(name);
+
+        // Spam-Schutz: Nach erfolgreichem Speichern ist dieser Score verbraucht.
+        // Danach startet eine neue Runde mit 0 Punkten.
+        score = 0;
+        combo = 0;
+        nextShuffleScore = SHUFFLE_THRESHOLD;
+        selected = [];
+        bombArmed = false;
+        bombsLeft = 2;
+        pickActiveCategories(true);
+        board = Array.from({length: ROWS}, (_, r) => Array.from({length: COLS}, (_, c) => makeBall(r, c)));
+        maybePlaceGoldenBall(GOLDEN_CHANCE_INITIAL);
+        chooseTarget();
+        render();
+        updateStats();
+
+        showToast("Gespeichert! Neustart");
         await loadHighscores();
       }catch(error){
         console.error("Highscore speichern fehlgeschlagen:", error);
@@ -2884,6 +2953,7 @@
     if(playerNameInput){
       playerNameInput.value = localStorage.getItem("diagnoseCrushPlayerName") || "";
     }
+    applyLockedNickname();
     updateStats();
     loadHighscores();
     newGame();
