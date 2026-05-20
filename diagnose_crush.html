@@ -53,6 +53,8 @@
     }
 
     header{
+      position:relative;
+      z-index:100000;
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -133,6 +135,198 @@
       background:linear-gradient(90deg,#ffcf42,#fff3a3,#7dffdc);
       box-shadow:0 0 12px rgba(255,231,123,.55);
       transition:width .32s ease;
+    }
+
+    .highscore-widget{
+      position:relative;
+      min-width:128px;
+      z-index:100001;
+    }
+
+    .highscore-toggle{
+      width:100%;
+      min-height:58px;
+      border:0;
+      color:var(--text);
+      padding:8px 32px 8px 10px;
+      border-radius:18px;
+      background:rgba(0,0,0,.24);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+      text-align:center;
+      cursor:pointer;
+      font:inherit;
+      position:relative;
+    }
+
+    .highscore-toggle small{
+      display:block;
+      color:var(--muted);
+      font-size:.68rem;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+    }
+
+    .highscore-toggle b{
+      display:block;
+      font-size:1.25rem;
+      color:#fff2a8;
+      text-shadow:0 0 13px rgba(255,214,75,.36);
+    }
+
+    .highscore-plus{
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      color:#2a1300;
+      font-weight:950;
+      background:linear-gradient(135deg,#fff2a8,#f6c542);
+      box-shadow:0 0 12px rgba(255,214,75,.42);
+      transition:transform .18s ease;
+    }
+
+    .highscore-toggle[aria-expanded="true"] .highscore-plus{
+      transform:translateY(-50%) rotate(45deg);
+    }
+
+    .highscore-panel{
+      position:fixed;
+      top:50%;
+      left:50%;
+      right:auto;
+      transform:translate(-50%,-50%);
+      width:min(420px,calc(100vw - 24px));
+      max-height:calc(100svh - 48px);
+      overflow:auto;
+      padding:16px;
+      border-radius:24px;
+      background:#08040d;
+      color:#fff8dc;
+      border:3px solid rgba(255,255,255,.42);
+      box-shadow:0 36px 110px rgba(0,0,0,.96),0 0 0 9999px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.16);
+      backdrop-filter:none;
+      -webkit-backdrop-filter:none;
+      isolation:isolate;
+      z-index:2147483000;
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .highscore-panel.hidden{display:none;}
+
+    .highscore-panel *{
+      position:relative;
+      z-index:1;
+      text-shadow:0 1px 2px rgba(0,0,0,.55);
+    }
+
+    .highscore-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:baseline;
+      gap:10px;
+      margin-bottom:9px;
+    }
+
+    .highscore-head strong{
+      font-size:1.1rem;
+      color:#fff2a8;
+    }
+
+    .highscore-head span{
+      color:var(--muted);
+      font-size:.78rem;
+    }
+
+    .highscore-save{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:8px;
+      margin-bottom:10px;
+    }
+
+    .highscore-save input{
+      min-width:0;
+      border:1px solid rgba(255,255,255,.34);
+      border-radius:999px;
+      padding:9px 11px;
+      color:var(--text);
+      background:#050208;
+      outline:none;
+      font-weight:750;
+    }
+
+    .highscore-save input::placeholder{color:rgba(255,248,220,.55);}
+
+    .nickname-note{
+      display:block;
+      color:rgba(255,248,220,.66);
+      font-size:.72rem;
+      line-height:1.2;
+      margin:-3px 4px 0;
+    }
+
+    .mini-btn{
+      border:0;
+      border-radius:999px;
+      padding:9px 11px;
+      color:#2a1300;
+      font-weight:900;
+      cursor:pointer;
+      background:linear-gradient(135deg,#fff2a8,#f6c542);
+      box-shadow:0 5px 0 #8a5a08,0 10px 18px rgba(0,0,0,.24);
+    }
+
+    .mini-btn:active{
+      transform:translateY(3px);
+      box-shadow:0 2px 0 #8a5a08,0 6px 13px rgba(0,0,0,.24);
+    }
+
+    .highscore-list{
+      display:grid;
+      gap:7px;
+    }
+
+    .highscore-list p{
+      margin:4px 0;
+      color:var(--muted);
+      font-size:.85rem;
+      line-height:1.35;
+    }
+
+    .highscore-row{
+      display:grid;
+      grid-template-columns:36px 1fr auto;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:14px;
+      background:#241532;
+      border:1px solid rgba(255,255,255,.34);
+    }
+
+    .highscore-rank{
+      color:#fff2a8;
+      font-weight:950;
+      text-align:right;
+    }
+
+    .highscore-name{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-weight:800;
+    }
+
+    .highscore-score{
+      color:#7dffdc;
+      font-weight:950;
+      font-size:1.05rem;
     }
 
     .game-shell{
@@ -644,6 +838,19 @@
       .btn{flex:1;}
       .hint{font-size:.8rem;padding:0 8px;}
       .ball{padding:5px;font-size:clamp(.49rem,2.45vw,.68rem);box-shadow:inset -7px -10px 14px hsl(var(--ball-h) 80% 18% / .34),inset 7px 7px 13px rgba(255,255,255,.42),0 6px 0 hsl(var(--ball-h) 82% 26%),0 0 14px hsl(var(--ball-h) 92% 62% / .22),0 10px 18px rgba(0,0,0,.33);}
+      .highscore-widget{min-width:118px;}
+      .highscore-toggle{min-height:52px;padding:7px 30px 7px 9px;}
+      .highscore-toggle b{font-size:1.05rem;}
+      .highscore-panel{
+        top:50%;
+        left:50%;
+        right:auto;
+        transform:translate(-50%,-50%);
+        width:calc(100vw - 20px);
+        max-height:calc(100svh - 32px);
+      }
+      .highscore-save{grid-template-columns:1fr;}
+      .mini-btn{width:100%;}
     }
   </style>
 </head>
@@ -657,7 +864,27 @@
       <div class="stats" aria-label="Spielwerte">
         <div class="stat"><small>Punkte</small><b id="score">0</b></div>
         <div class="stat"><small>Combo</small><b id="combo">0</b></div>
-        <div class="stat"><small>Dx</small><b id="semesterStat">–</b></div>
+        <div class="highscore-widget">
+          <button class="highscore-toggle" id="highscoreToggle" type="button" aria-expanded="false">
+            <small>Highscore</small>
+            <b id="bestHighscore">–</b>
+            <span class="highscore-plus" id="highscorePlus" aria-hidden="true">＋</span>
+          </button>
+          <div class="highscore-panel hidden" id="highscorePanel">
+            <div class="highscore-head">
+              <strong>Top 20</strong>
+              <span id="highscoreStatus">Lädt…</span>
+            </div>
+            <div class="highscore-save">
+              <input id="playerNameInput" type="text" maxlength="18" placeholder="Nickname (wird öffentlich angezeigt)" autocomplete="nickname" />
+              <small class="nickname-note">2–18 Zeichen. Beleidigende oder ungeeignete Nicknames werden blockiert.</small>
+              <button class="mini-btn" id="saveScoreBtn" type="button">Score speichern</button>
+            </div>
+            <div class="highscore-list" id="highscoreList">
+              <p>Noch keine Daten geladen.</p>
+            </div>
+          </div>
+        </div>
         <div class="stat progress-stat">
           <small>Mix</small>
           <b id="pointsProgress">0/50</b>
@@ -684,10 +911,7 @@
         </div>
       </div>
 
-      <p class="hint">
-        Streiche mit Maus oder Finger über mehrere Kugeln. Beim Loslassen explodiert die Auswahl nur, wenn alle Symptome zur gesuchten Diagnose passen. Symptome, die zu mehreren aktiven Diagnosen gehören, werden farblich geteilt und schimmern. Die Bombe kann 2× ein 3×3-Feld sprengen. Alle 50 Punkte werden die aktiven Diagnosen neu gemischt; goldene Glanz-Kugeln zählen 5 Punkte.
-      </p>
-      <div class="footer-note">Diagnose- und Symptomdaten sind im JavaScript-Bereich <strong>DIAGNOSIS_DATA</strong> hinterlegt. Pro Runde sind 6 Diagnosen aktiv.</div>
+
     </section>
   </main>
 
@@ -1481,9 +1705,15 @@
     const newGameBtn = document.getElementById("newGameBtn");
     const bombBtn = document.getElementById("bombBtn");
     const semesterBtn = document.getElementById("semesterBtn");
-    const semesterStatEl = document.getElementById("semesterStat");
     const pointsProgressEl = document.getElementById("pointsProgress");
     const pointsFillEl = document.getElementById("pointsFill");
+    const highscoreToggle = document.getElementById("highscoreToggle");
+    const highscorePanel = document.getElementById("highscorePanel");
+    const bestHighscoreEl = document.getElementById("bestHighscore");
+    const highscoreListEl = document.getElementById("highscoreList");
+    const highscoreStatusEl = document.getElementById("highscoreStatus");
+    const saveScoreBtn = document.getElementById("saveScoreBtn");
+    const playerNameInput = document.getElementById("playerNameInput");
 
     let board = [];
     let targetCategory = "";
@@ -1503,6 +1733,10 @@
     const SHUFFLE_THRESHOLD = 50;
     const GOLDEN_CHANCE_INITIAL = 0.34;
     const GOLDEN_CHANCE_AFTER_DROP = 0.22;
+    const HIGHSCORE_API = "https://fage-highscore-api.domi-jufer.workers.dev";
+    const GAME_NAME = "diagnosen-crush";
+    let highscoreCache = [];
+    let highscoreOpen = false;
     let activeCategories = [];
     let nextShuffleScore = SHUFFLE_THRESHOLD;
     let categoryColorMap = new Map();
@@ -1850,7 +2084,6 @@
     function setSemester(semester){
       currentSemester = semester;
       GAME_DATA = (GAME_SEMESTERS[semester] || []).filter(cat => cat.terms.length > 1);
-      semesterStatEl.textContent = "6 aktiv";
       newGame();
       semesterModal.classList.add("hidden");
       showToast(semester);
@@ -1924,6 +2157,167 @@
       if(pointsFillEl) pointsFillEl.style.width = `${percent}%`;
 
       updateBombButton();
+    }
+
+    function escapeHTML(value){
+      return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function setHighscoreStatus(message){
+      if(highscoreStatusEl) highscoreStatusEl.textContent = message;
+    }
+
+    async function loadHighscores(){
+      try{
+        setHighscoreStatus("Lädt…");
+        const response = await fetch(`${HIGHSCORE_API}/scores?game=${encodeURIComponent(GAME_NAME)}`, {
+          method:"GET",
+          cache:"no-store"
+        });
+        if(!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        highscoreCache = Array.isArray(data.scores) ? data.scores : [];
+        renderHighscores();
+        setHighscoreStatus(highscoreCache.length ? "Online" : "Leer");
+      }catch(error){
+        console.error("Highscore laden fehlgeschlagen:", error);
+        setHighscoreStatus("Offline");
+        if(bestHighscoreEl) bestHighscoreEl.textContent = "–";
+        if(highscoreListEl) highscoreListEl.innerHTML = "<p>Highscores konnten gerade nicht geladen werden.</p>";
+      }
+    }
+
+    function renderHighscores(){
+      const sorted = [...highscoreCache]
+        .map(entry => ({
+          name: String(entry.name || "Unbekannt").replace(/\s+/g," ").trim().slice(0, 28),
+          score: Number(entry.score) || 0,
+          created_at: entry.created_at || ""
+        }))
+        .sort((a,b) => b.score - a.score)
+        .slice(0,20);
+
+      if(bestHighscoreEl){
+        bestHighscoreEl.textContent = sorted.length ? sorted[0].score : "–";
+      }
+
+      if(!highscoreListEl) return;
+
+      if(!sorted.length){
+        highscoreListEl.innerHTML = "<p>Noch keine Highscores vorhanden.</p>";
+        return;
+      }
+
+      highscoreListEl.innerHTML = sorted.map((entry, index) => `
+        <div class="highscore-row">
+          <span class="highscore-rank">${index + 1}.</span>
+          <span class="highscore-name">${escapeHTML(entry.name)}</span>
+          <strong class="highscore-score">${entry.score}</strong>
+        </div>
+      `).join("");
+    }
+
+    const BLOCKED_NICKNAME_PARTS = [
+      "admin","administrator","moderator","system","chatgpt","openai",
+      "hitler","nazi","n4zi","nsdap","holocaust",
+      "fuck","fick","ficker","ficken","shit","bitch","bastard","asshole","arsch","arschloch",
+      "idiot","dummkopf","trottel","wichser","wixer","hurensohn","hure","nutte","schlampe",
+      "sex","porno","porn","xxx","penis","vagina","pimmel","schwanz","fotze",
+      "suizid","suicide","kill","mord","mörder","moerder","terror","terrorist",
+      "neger","nigger","n1gger","nigga","kanake","zigeuner",
+      "spast","behindert","mongo","retard"
+    ];
+
+    function normalizeNicknameForFilter(value){
+      return String(value || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g,"")
+        .replaceAll("0","o")
+        .replaceAll("1","i")
+        .replaceAll("3","e")
+        .replaceAll("4","a")
+        .replaceAll("5","s")
+        .replaceAll("7","t")
+        .replaceAll("@","a")
+        .replaceAll("€","e")
+        .replaceAll("$","s")
+        .replace(/[^a-z0-9äöüß]/gi,"");
+    }
+
+    function validateNickname(rawName){
+      const name = String(rawName || "").trim().replace(/\s+/g," ");
+      if(name.length < 2) return {ok:false, message:"Nickname zu kurz"};
+      if(name.length > 18) return {ok:false, message:"Nickname zu lang"};
+      if(/https?:\/\//i.test(name) || /www\./i.test(name) || /@/.test(name)){
+        return {ok:false, message:"Keine Links/E-Mails"};
+      }
+      if(!/^[\p{L}\p{N} _.-]+$/u.test(name)){
+        return {ok:false, message:"Ungültige Zeichen"};
+      }
+
+      const compact = normalizeNicknameForFilter(name);
+      const blocked = BLOCKED_NICKNAME_PARTS.some(part => compact.includes(normalizeNicknameForFilter(part)));
+      if(blocked) return {ok:false, message:"Nickname blockiert"};
+
+      return {ok:true, name};
+    }
+
+    async function saveCurrentHighscore(){
+      const validation = validateNickname(playerNameInput?.value || "");
+      if(!validation.ok){
+        showToast(validation.message);
+        playerNameInput?.focus();
+        return;
+      }
+      const name = validation.name;
+
+      if(!Number.isFinite(score) || score <= 0){
+        showToast("Noch keine Punkte");
+        return;
+      }
+
+      try{
+        saveScoreBtn.disabled = true;
+        saveScoreBtn.textContent = "Speichert…";
+        setHighscoreStatus("Speichert…");
+
+        const response = await fetch(`${HIGHSCORE_API}/score`, {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({
+            game:GAME_NAME,
+            name:name,
+            score:score
+          })
+        });
+
+        if(!response.ok) throw new Error(`HTTP ${response.status}`);
+        await response.json();
+
+        localStorage.setItem("diagnoseCrushPlayerName", name);
+        showToast("Gespeichert!");
+        await loadHighscores();
+      }catch(error){
+        console.error("Highscore speichern fehlgeschlagen:", error);
+        setHighscoreStatus("Fehler");
+        showToast("Speichern fehlgeschlagen");
+      }finally{
+        saveScoreBtn.disabled = false;
+        saveScoreBtn.textContent = "Score speichern";
+      }
+    }
+
+    function toggleHighscorePanel(force){
+      highscoreOpen = typeof force === "boolean" ? force : !highscoreOpen;
+      highscorePanel?.classList.toggle("hidden", !highscoreOpen);
+      highscoreToggle?.setAttribute("aria-expanded", String(highscoreOpen));
+      if(highscoreOpen) loadHighscores();
     }
 
     function updateBombButton(){
@@ -2462,6 +2856,17 @@
     });
 
     helpBtn.addEventListener("click", () => modal.classList.remove("hidden"));
+    highscoreToggle.addEventListener("click", () => toggleHighscorePanel());
+    saveScoreBtn.addEventListener("click", saveCurrentHighscore);
+    playerNameInput.addEventListener("keydown", ev => {
+      if(ev.key === "Enter") saveCurrentHighscore();
+    });
+    document.addEventListener("click", ev => {
+      if(!highscoreOpen) return;
+      if(highscorePanel?.contains(ev.target) || highscoreToggle?.contains(ev.target)) return;
+      toggleHighscorePanel(false);
+    });
+
     semesterBtn.addEventListener("click", async () => {
       if(locked || !GAME_DATA.length) return;
       unlockAudio();
@@ -2476,8 +2881,11 @@
     });
 
     populateSemesterButtons();
-    semesterStatEl.textContent = "6 aktiv";
+    if(playerNameInput){
+      playerNameInput.value = localStorage.getItem("diagnoseCrushPlayerName") || "";
+    }
     updateStats();
+    loadHighscores();
     newGame();
   </script>
 </body>
