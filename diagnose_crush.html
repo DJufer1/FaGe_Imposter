@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Diagnose Crush – Symptome</title>
+  <style>
+    :root{
+      --bg1:#120818;
+      --bg2:#2b1238;
+      --panel:rgba(255,255,255,.09);
+      --panel2:rgba(255,255,255,.14);
+      --gold1:#fff2a8;
+      --gold2:#f6c542;
+      --gold3:#b67512;
+      --green1:#c9ffb0;
+      --green2:#33d174;
+      --green3:#057b42;
+      --red1:#ffb6b6;
+      --red2:#ff3434;
+      --red3:#8d0000;
+      --text:#fff8dc;
+      --muted:rgba(255,248,220,.72);
+      --cell-size:min(12.3vw,74px);
+      --gap:min(1.35vw,9px);
+      --cols:7;
+    }
+
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+
+    body{
+      margin:0;
+      min-height:100svh;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 20% 8%, rgba(255,219,98,.18), transparent 22%),
+        radial-gradient(circle at 80% 14%, rgba(94,222,255,.12), transparent 28%),
+        radial-gradient(circle at 50% 110%, rgba(255,73,151,.18), transparent 36%),
+        linear-gradient(160deg,var(--bg1),var(--bg2) 55%,#090510);
+      overflow-x:hidden;
+      user-select:none;
+    }
+
+    .app{
+      width:min(100%,720px);
+      min-height:100svh;
+      margin:0 auto;
+      padding:14px 12px 18px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:24px;
+      background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.06));
+      box-shadow:0 18px 50px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.18);
+      backdrop-filter:blur(16px);
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      line-height:1.05;
+      gap:3px;
+    }
+
+    .brand strong{
+      font-size:clamp(1.35rem,6vw,2.25rem);
+      letter-spacing:.02em;
+      text-shadow:0 3px 0 rgba(0,0,0,.25),0 0 24px rgba(255,202,59,.22);
+    }
+
+    .brand span{
+      color:var(--muted);
+      font-size:.82rem;
+    }
+
+    .stats{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .stat{
+      min-width:78px;
+      padding:8px 10px;
+      border-radius:18px;
+      background:rgba(0,0,0,.24);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+      text-align:center;
+    }
+
+    .stat small{
+      display:block;
+      color:var(--muted);
+      font-size:.68rem;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+    }
+
+    .stat b{
+      font-size:1.25rem;
+    }
+
+    .progress-stat{
+      min-width:112px;
+    }
+
+    .score-meter{
+      width:100%;
+      height:7px;
+      margin-top:5px;
+      border-radius:999px;
+      overflow:hidden;
+      background:rgba(255,255,255,.16);
+      box-shadow:inset 0 1px 3px rgba(0,0,0,.32);
+    }
+
+    .score-meter span{
+      display:block;
+      width:0%;
+      height:100%;
+      border-radius:inherit;
+      background:linear-gradient(90deg,#ffcf42,#fff3a3,#7dffdc);
+      box-shadow:0 0 12px rgba(255,231,123,.55);
+      transition:width .32s ease;
+    }
+
+    .game-shell{
+      position:relative;
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      padding:12px 0;
+    }
+
+    .board-wrap{
+      position:relative;
+      padding:12px;
+      border-radius:30px;
+      border:1px solid rgba(255,255,255,.16);
+      background:
+        linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.035)),
+        radial-gradient(circle at 30% 20%,rgba(255,218,93,.14),transparent 35%),
+        rgba(0,0,0,.20);
+      box-shadow:
+        0 28px 70px rgba(0,0,0,.40),
+        inset 0 1px 0 rgba(255,255,255,.14),
+        inset 0 -22px 55px rgba(0,0,0,.18);
+      perspective:900px;
+      touch-action:none;
+    }
+
+    .board-wrap::before{
+      content:"";
+      position:absolute;
+      inset:7px;
+      border-radius:25px;
+      pointer-events:none;
+      background:linear-gradient(135deg,rgba(255,255,255,.10),transparent 22%,rgba(0,0,0,.16));
+      mix-blend-mode:screen;
+    }
+
+    #board{
+      position:relative;
+      z-index:1;
+      display:grid;
+      grid-template-columns:repeat(var(--cols),var(--cell-size));
+      gap:var(--gap);
+      transform:rotateX(5deg);
+      transform-style:preserve-3d;
+      touch-action:none;
+    }
+
+    .ball{
+      --ball-h:42;
+      width:var(--cell-size);
+      height:var(--cell-size);
+      border:0;
+      border-radius:999px;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px;
+      cursor:pointer;
+      color:#2f1800;
+      font-weight:850;
+      font-size:clamp(.56rem,2.1vw,.83rem);
+      line-height:1.02;
+      text-align:center;
+      text-shadow:0 1px 0 rgba(255,255,255,.58);
+      background:
+        radial-gradient(circle at 30% 20%,rgba(255,255,255,.98) 0 8%,rgba(255,255,255,.38) 9% 16%,transparent 17%),
+        radial-gradient(circle at 33% 27%,hsl(var(--ball-h) 100% 93%),hsl(var(--ball-h) 88% 61%) 40%,hsl(var(--ball-h) 82% 34%) 82%,hsl(var(--ball-h) 86% 24%) 100%);
+      box-shadow:
+        inset -9px -12px 18px hsl(var(--ball-h) 80% 18% / .34),
+        inset 8px 8px 17px rgba(255,255,255,.44),
+        0 9px 0 hsl(var(--ball-h) 82% 26%),
+        0 0 18px hsl(var(--ball-h) 92% 62% / .24),
+        0 15px 23px rgba(0,0,0,.33);
+      transform:translateZ(16px);
+      transition:transform .14s ease, filter .14s ease, box-shadow .14s ease, background .14s ease;
+      overflow:hidden;
+    }
+
+    .ball .termText{
+      position:relative;
+      z-index:1;
+      display:block;
+      max-width:100%;
+      overflow-wrap:anywhere;
+      hyphens:auto;
+    }
+
+    .ball .term-line{
+      display:block;
+      white-space:nowrap;
+    }
+
+    .ball::after{
+      content:"";
+      position:absolute;
+      inset:10% 14% auto auto;
+      width:26%;
+      height:16%;
+      border-radius:50%;
+      background:rgba(255,255,255,.56);
+      transform:rotate(-24deg);
+      filter:blur(.3px);
+    }
+
+    .ball.multi-diagnosis:not(.golden-special){
+      --multi-bg:conic-gradient(from -20deg, hsl(var(--ball-h) 88% 61%) 0deg 360deg);
+      background:
+        radial-gradient(circle at 30% 20%,rgba(255,255,255,.98) 0 8%,rgba(255,255,255,.38) 9% 16%,transparent 17%),
+        radial-gradient(circle at 35% 28%,rgba(255,255,255,.22),transparent 30%,rgba(0,0,0,.18) 86%),
+        var(--multi-bg);
+      box-shadow:
+        inset -9px -12px 18px rgba(0,0,0,.28),
+        inset 8px 8px 17px rgba(255,255,255,.44),
+        0 9px 0 rgba(0,0,0,.38),
+        0 0 22px rgba(255,255,255,.28),
+        0 15px 23px rgba(0,0,0,.33);
+    }
+
+    .ball.multi-diagnosis:not(.golden-special)::before{
+      content:"";
+      position:absolute;
+      inset:-4px;
+      border-radius:999px;
+      pointer-events:none;
+      background:conic-gradient(from 0deg, transparent 0 13%, rgba(255,255,255,.55) 16%, transparent 20% 45%, rgba(255,255,255,.38) 48%, transparent 53% 100%);
+      filter:blur(.35px);
+      animation:sharedShimmer 2.8s linear infinite;
+      z-index:0;
+    }
+
+    .ball.multi-diagnosis:not(.golden-special) .termText{z-index:2;}
+
+    @keyframes sharedShimmer{
+      from{transform:rotate(0deg) scale(1);opacity:.45;}
+      50%{transform:rotate(180deg) scale(1.045);opacity:.78;}
+      to{transform:rotate(360deg) scale(1);opacity:.45;}
+    }
+
+    .ball:active,
+    .ball.selected{
+      transform:translateZ(28px) translateY(-5px) scale(1.08);
+    }
+
+    .ball.selected{
+      color:#013a1f;
+      background:
+        radial-gradient(circle at 30% 20%,rgba(255,255,255,.98) 0 8%,rgba(255,255,255,.36) 9% 16%,transparent 17%),
+        radial-gradient(circle at 33% 27%,var(--green1),var(--green2) 43%,var(--green3) 88%);
+      box-shadow:
+        inset -9px -12px 18px rgba(0,82,38,.33),
+        inset 8px 8px 17px rgba(255,255,255,.43),
+        0 9px 0 #04512f,
+        0 0 28px rgba(77,255,153,.48),
+        0 15px 23px rgba(0,0,0,.33);
+    }
+
+    .ball.golden-special,
+    .ball.golden-special.selected{
+      overflow:visible;
+      z-index:3;
+      color:#3c2300;
+      text-shadow:0 1px 0 rgba(255,255,255,.76),0 0 7px rgba(255,255,255,.42);
+      background:
+        radial-gradient(circle at 28% 18%,#fff 0 8%,rgba(255,255,255,.72) 9% 17%,transparent 18%),
+        radial-gradient(circle at 36% 30%,#fffbe0,#ffd84a 42%,#f39b10 78%,#8c4a00 100%);
+      box-shadow:
+        inset -9px -13px 18px rgba(117,62,0,.34),
+        inset 8px 8px 17px rgba(255,255,255,.58),
+        0 9px 0 #8d4a00,
+        0 0 12px rgba(255,255,255,.8),
+        0 0 32px rgba(255,219,71,.72),
+        0 15px 23px rgba(0,0,0,.33);
+    }
+
+    .ball.golden-special.selected{
+      transform:translateZ(34px) translateY(-6px) scale(1.10);
+      outline:3px solid rgba(255,255,255,.62);
+      outline-offset:2px;
+    }
+
+    .ball.golden-special::before{
+      content:"";
+      position:absolute;
+      inset:-7px;
+      border-radius:999px;
+      pointer-events:none;
+      background:conic-gradient(from 0deg, transparent 0 18%, rgba(255,255,255,.75) 20%, transparent 24% 48%, rgba(255,245,160,.68) 51%, transparent 55% 100%);
+      filter:blur(.4px);
+      animation:goldSpin 2.4s linear infinite;
+      z-index:-1;
+    }
+
+    .fairy-dust{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:6px;
+      height:6px;
+      border-radius:999px;
+      pointer-events:none;
+      z-index:0;
+      background:radial-gradient(circle,#fff 0 25%,#fff7a4 40%,rgba(125,255,220,.78) 100%);
+      box-shadow:0 0 9px rgba(255,244,141,.95),0 0 15px rgba(125,255,220,.42);
+      opacity:.85;
+      --a:0deg;
+      --r:34px;
+      --s:1;
+      --d:3s;
+      animation:fairyOrbit var(--d) linear infinite;
+    }
+
+    .fairy-dust.fd1{--a:12deg;--r:32px;--s:.9;--d:2.4s;}
+    .fairy-dust.fd2{--a:126deg;--r:38px;--s:.7;--d:3.1s;}
+    .fairy-dust.fd3{--a:244deg;--r:30px;--s:1.05;--d:2.8s;}
+    .fairy-dust.fd4{--a:314deg;--r:36px;--s:.78;--d:3.5s;}
+
+    @keyframes goldSpin{
+      from{transform:rotate(0deg) scale(1);}
+      50%{transform:rotate(180deg) scale(1.04);}
+      to{transform:rotate(360deg) scale(1);}
+    }
+
+    @keyframes fairyOrbit{
+      from{transform:rotate(var(--a)) translateX(var(--r)) scale(var(--s));opacity:.15;}
+      18%{opacity:1;}
+      50%{opacity:.7;}
+      to{transform:rotate(calc(var(--a) + 360deg)) translateX(var(--r)) scale(var(--s));opacity:.2;}
+    }
+
+    .ball.exploding{
+      animation:explodeBall .34s ease-in forwards;
+      pointer-events:none;
+    }
+
+    .ball.bad{
+      animation:badBlink .55s ease-in-out 2;
+    }
+
+    .ball.spawn{
+      animation:spawn .78s cubic-bezier(.16,.92,.2,1) backwards;
+    }
+
+    @keyframes spawn{
+      from{opacity:0;transform:translateZ(5px) translateY(-130px) scale(.72) rotate(-10deg);}
+      to{opacity:1;transform:translateZ(16px) translateY(0) scale(1) rotate(0deg);}
+    }
+
+    @keyframes explodeBall{
+      0%{opacity:1;transform:translateZ(28px) scale(1.08);filter:saturate(1.2) brightness(1.15);}
+      58%{opacity:1;transform:translateZ(40px) scale(1.32);filter:saturate(1.6) brightness(1.35);}
+      100%{opacity:0;transform:translateZ(50px) scale(.08) rotate(34deg);filter:blur(2px);}
+    }
+
+    @keyframes badBlink{
+      0%,100%{
+        background:
+          radial-gradient(circle at 30% 20%,rgba(255,255,255,.98) 0 8%,rgba(255,255,255,.38) 9% 16%,transparent 17%),
+          radial-gradient(circle at 33% 27%,hsl(var(--ball-h) 100% 93%),hsl(var(--ball-h) 88% 61%) 40%,hsl(var(--ball-h) 82% 34%) 82%,hsl(var(--ball-h) 86% 24%) 100%);
+        color:#2f1800;
+      }
+      45%{
+        background:
+          radial-gradient(circle at 30% 20%,rgba(255,255,255,.98) 0 8%,rgba(255,255,255,.36) 9% 16%,transparent 17%),
+          radial-gradient(circle at 33% 27%,var(--red1),var(--red2) 45%,var(--red3) 90%);
+        color:#fff;
+        text-shadow:0 2px 2px rgba(0,0,0,.4);
+        transform:translateZ(28px) scale(1.10) rotate(-3deg);
+        box-shadow:inset -9px -12px 18px rgba(80,0,0,.36),inset 8px 8px 17px rgba(255,255,255,.38),0 9px 0 #6e0000,0 0 26px rgba(255,45,45,.55),0 15px 23px rgba(0,0,0,.33);
+      }
+    }
+
+    .target-card{
+      width:100%;
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:10px;
+      padding:12px;
+      border-radius:26px;
+      background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:0 16px 44px rgba(0,0,0,.27),inset 0 1px 0 rgba(255,255,255,.16);
+      backdrop-filter:blur(14px);
+    }
+
+    .target-label{
+      color:var(--muted);
+      font-size:.82rem;
+      margin-bottom:2px;
+    }
+
+    #targetCategory{
+      font-size:clamp(1.35rem,5.4vw,2rem);
+      font-weight:900;
+      letter-spacing:.02em;
+      color:#fff5bf;
+      text-shadow:0 0 18px rgba(255,213,68,.36),0 3px 0 rgba(0,0,0,.25);
+    }
+
+    .buttons{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .btn{
+      border:0;
+      color:#fff;
+      font-weight:800;
+      border-radius:999px;
+      padding:10px 14px;
+      background:linear-gradient(135deg,#7d3cff,#d749ff);
+      box-shadow:0 8px 0 #4c1a95,0 14px 22px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.25);
+      cursor:pointer;
+      transition:.15s ease;
+    }
+
+    .btn:active{
+      transform:translateY(5px);
+      box-shadow:0 3px 0 #4c1a95,0 7px 16px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.25);
+    }
+
+    .btn.secondary{
+      background:linear-gradient(135deg,#273145,#516379);
+      box-shadow:0 8px 0 #151a25,0 14px 22px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.2);
+    }
+
+    .btn.bomb{
+      background:linear-gradient(135deg,#ffcf42,#ff7b2e);
+      color:#2a1300;
+      text-shadow:0 1px 0 rgba(255,255,255,.45);
+      box-shadow:0 8px 0 #8a3b00,0 14px 22px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.3);
+    }
+
+    .btn.bomb.armed{
+      background:linear-gradient(135deg,#7d8491,#424957);
+      color:#f0f2f7;
+      box-shadow:0 4px 0 #242934,0 8px 18px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.18);
+      transform:translateY(4px);
+    }
+
+    .btn.bomb.disabled{
+      opacity:.42;
+      cursor:not-allowed;
+      filter:grayscale(.7);
+    }
+
+    .hint{
+      margin:0 auto;
+      max-width:640px;
+      color:var(--muted);
+      font-size:.87rem;
+      line-height:1.35;
+      text-align:center;
+    }
+
+    .toast,
+    .flyText{
+      position:fixed;
+      left:50%;
+      top:50%;
+      z-index:20;
+      transform:translate(-50%,-50%);
+      pointer-events:none;
+      font-weight:950;
+      letter-spacing:.03em;
+      text-align:center;
+      text-shadow:0 3px 0 rgba(0,0,0,.34),0 0 18px rgba(255,255,255,.28);
+    }
+
+    .toast{
+      color:#fff4b8;
+      font-size:clamp(1.5rem,8vw,3rem);
+      animation:toast .9s ease forwards;
+    }
+
+    .flyText{
+      color:#9effff;
+      font-size:clamp(1.05rem,5.4vw,2.1rem);
+      animation:flyUp 2.85s cubic-bezier(.16,.8,.25,1) forwards;
+      white-space:nowrap;
+    }
+
+    @keyframes toast{
+      0%{opacity:0;transform:translate(-50%,-45%) scale(.7);filter:blur(2px);}
+      16%{opacity:1;transform:translate(-50%,-50%) scale(1.06);filter:blur(0);}
+      100%{opacity:0;transform:translate(-50%,-85%) scale(1);}
+    }
+
+    @keyframes flyUp{
+      0%{opacity:0;transform:translate(-50%,0) scale(.75);filter:blur(2px);}
+      10%{opacity:1;transform:translate(-50%,-10px) scale(1.05);filter:blur(0);}
+      68%{opacity:1;transform:translate(-50%,-42px) scale(1.08);filter:blur(0);}
+      100%{opacity:0;transform:translate(-50%,-120px) scale(1.12);filter:blur(1.2px);}
+    }
+
+    .particle{
+      position:fixed;
+      z-index:30;
+      width:9px;
+      height:9px;
+      border-radius:999px;
+      pointer-events:none;
+      background:radial-gradient(circle at 30% 30%,#fff,#ffd94d 38%,#ff8b26 100%);
+      box-shadow:0 0 12px rgba(255,213,74,.75);
+      animation:particle .72s ease-out forwards;
+    }
+
+    @keyframes particle{
+      from{opacity:1;transform:translate(0,0) scale(1);}
+      to{opacity:0;transform:translate(var(--x),var(--y)) scale(.15);}
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index:100;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(8,4,12,.72);
+      backdrop-filter:blur(13px);
+    }
+
+    .modal.hidden{display:none;}
+
+    .modal-card{
+      width:min(560px,100%);
+      padding:20px;
+      border-radius:30px;
+      background:
+        radial-gradient(circle at 20% 10%,rgba(255,218,83,.16),transparent 32%),
+        linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.06)),
+        #1b1025;
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow:0 30px 80px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.2);
+    }
+
+    .modal-card h2{
+      margin:0 0 8px;
+      font-size:2rem;
+    }
+
+    .modal-card p{
+      color:var(--muted);
+      line-height:1.45;
+      margin:8px 0;
+    }
+
+    .modal-card ul{
+      margin:12px 0 18px;
+      padding-left:20px;
+      color:var(--text);
+      line-height:1.42;
+    }
+
+    .footer-note{
+      color:rgba(255,248,220,.58);
+      text-align:center;
+      font-size:.75rem;
+    }
+
+
+
+    .ball.long{font-size:clamp(.48rem,1.75vw,.68rem);letter-spacing:-.02em;}
+    .ball.tiny{font-size:clamp(.42rem,1.45vw,.58rem);line-height:1;letter-spacing:-.045em;}
+
+    .semester-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(136px,1fr));
+      gap:10px;
+      margin:16px 0 4px;
+    }
+
+    .semester-choice{
+      min-height:74px;
+      border:0;
+      border-radius:22px;
+      padding:12px 10px;
+      color:#fff;
+      cursor:pointer;
+      font-weight:900;
+      text-align:left;
+      background:linear-gradient(135deg,rgba(125,60,255,.96),rgba(215,73,255,.92));
+      box-shadow:0 8px 0 #4c1a95,0 14px 22px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.25);
+      transition:.15s ease;
+    }
+
+    .semester-choice:active{transform:translateY(5px);box-shadow:0 3px 0 #4c1a95,0 8px 16px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.25);}
+    .semester-choice small{display:block;margin-top:5px;font-weight:750;color:rgba(255,255,255,.76);font-size:.74rem;}
+
+    @media (max-width:520px){
+      :root{--cell-size:min(12.7vw,56px);--gap:1.15vw;}
+      .app{padding:10px 8px 14px;gap:9px;}
+      header{border-radius:20px;padding:9px;}
+      .stat{min-width:63px;padding:7px 8px;}
+      .progress-stat{min-width:96px;}
+      .stat b{font-size:1.05rem;}
+      .board-wrap{padding:8px;border-radius:24px;}
+      .target-card{grid-template-columns:1fr;border-radius:22px;}
+      .buttons{justify-content:stretch;}
+      .btn{flex:1;}
+      .hint{font-size:.8rem;padding:0 8px;}
+      .ball{padding:5px;font-size:clamp(.49rem,2.45vw,.68rem);box-shadow:inset -7px -10px 14px hsl(var(--ball-h) 80% 18% / .34),inset 7px 7px 13px rgba(255,255,255,.42),0 6px 0 hsl(var(--ball-h) 82% 26%),0 0 14px hsl(var(--ball-h) 92% 62% / .22),0 10px 18px rgba(0,0,0,.33);}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <strong>Diagnose Crush</strong>
+        <span>Diagnosen erkennen, Symptome finden, Kugeln sprengen.</span>
+      </div>
+      <div class="stats" aria-label="Spielwerte">
+        <div class="stat"><small>Punkte</small><b id="score">0</b></div>
+        <div class="stat"><small>Combo</small><b id="combo">0</b></div>
+        <div class="stat"><small>Dx</small><b id="semesterStat">–</b></div>
+        <div class="stat progress-stat">
+          <small>Mix</small>
+          <b id="pointsProgress">0/50</b>
+          <div class="score-meter" aria-hidden="true"><span id="pointsFill"></span></div>
+        </div>
+      </div>
+    </header>
+
+    <section class="game-shell">
+      <div class="board-wrap" id="boardWrap">
+        <div id="board" aria-label="Spielfeld"></div>
+      </div>
+
+      <div class="target-card">
+        <div>
+          <div class="target-label">Aktuelle Diagnose</div>
+          <div id="targetCategory">Diagnose wird geladen</div>
+        </div>
+        <div class="buttons">
+          <button class="btn bomb" id="bombBtn" type="button">💣 Bombe 2x</button>
+          <button class="btn secondary" id="semesterBtn" type="button">Neue Diagnosen</button>
+          <button class="btn secondary" id="helpBtn" type="button">Regeln</button>
+          <button class="btn" id="newGameBtn" type="button">Neues Spiel</button>
+        </div>
+      </div>
+
+      <p class="hint">
+        Streiche mit Maus oder Finger über mehrere Kugeln. Beim Loslassen explodiert die Auswahl nur, wenn alle Symptome zur gesuchten Diagnose passen. Symptome, die zu mehreren aktiven Diagnosen gehören, werden farblich geteilt und schimmern. Die Bombe kann 2× ein 3×3-Feld sprengen. Alle 50 Punkte werden die aktiven Diagnosen neu gemischt; goldene Glanz-Kugeln zählen 5 Punkte.
+      </p>
+      <div class="footer-note">Diagnose- und Symptomdaten sind im JavaScript-Bereich <strong>DIAGNOSIS_DATA</strong> hinterlegt. Pro Runde sind 6 Diagnosen aktiv.</div>
+    </section>
+  </main>
+
+  <div class="modal hidden" id="semesterModal" role="dialog" aria-modal="true" aria-labelledby="semesterTitle">
+    <div class="modal-card">
+      <h2 id="semesterTitle">Diagnose-Set</h2>
+      <p>Dieses Spiel nutzt Diagnosen als Überkategorien und Symptome als Kugeln. Gemeinsame Symptome können zu mehreren Diagnosen passen.</p>
+      <div class="semester-grid" id="semesterGrid"></div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="rulesModal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+    <div class="modal-card">
+      <h2 id="rulesTitle">Spielregeln</h2>
+      <p>Unten steht die gesuchte Diagnose. Wähle durch Darüberstreichen die passenden Symptom-Kugeln aus.</p>
+      <ul>
+        <li>Alle ausgewählten Symptome passen zur Diagnose: Kugeln explodieren und geben Punkte.</li>
+        <li>Falsche Auswahl: falsche Kugeln blinken rot und es gibt −1 Punkt.</li>
+        <li>2 Begriffe = 2 Punkte, 3 Begriffe = 4 Punkte, 4 Begriffe = 6 Punkte usw.</li>
+        <li>Wenn nach dem Nachrutschen 6 oder mehr Symptome derselben anderen Diagnose zusammenliegen, explodieren sie einmalig als Kettenreaktion.</li>
+        <li>Alle 50 Punkte wird das Spielfeld mit 6 neuen aktiven Diagnosen neu gemischt.</li>
+        <li>Eine goldene Glanz-Kugel kann selten erscheinen. Sie bringt 5 Punkte und es gibt maximal eine davon auf dem Spielfeld.</li>
+        <li>Die Bombe ist 2× nutzbar: Bombe anklicken, dann eine Kugel wählen. Diese und alle umliegenden Kugeln explodieren.</li>
+      </ul>
+      <button class="btn" id="closeRulesBtn" type="button">Verstanden</button>
+    </div>
+  </div>
+
+  <script>
+    // Aus der hochgeladenen Begriffsliste generiert.
+    // Semester -> Handlungskompetenzbereich als Kategorie -> Diagnosen und Schlüsselbegriffe als Kugel-Begriffe.
+    const DIAGNOSIS_DATA = [
+      {
+            "category": "Adipositas",
+            "terms": [
+                  "erhöhtes Körpergewicht",
+                  "Atemnot bei Belastung",
+                  "Gelenkschmerzen",
+                  "schnelle Ermüdung",
+                  "eingeschränkte Mobilität"
+            ]
+      },
+      {
+            "category": "Mangelernährung / Malnutrition",
+            "terms": [
+                  "Gewichtsverlust",
+                  "Müdigkeit",
+                  "Muskelschwäche",
+                  "Appetitlosigkeit",
+                  "erhöhte Infektanfälligkeit"
+            ]
+      },
+      {
+            "category": "Dysphagie",
+            "terms": [
+                  "Verschlucken",
+                  "Husten beim Essen oder Trinken",
+                  "Räuspern",
+                  "Atemnot beim Essen",
+                  "Gewichtsverlust"
+            ]
+      },
+      {
+            "category": "Melanom",
+            "terms": [
+                  "verändertes Muttermal",
+                  "unregelmässige Begrenzung",
+                  "Farbveränderung der Hautstelle",
+                  "Grössenzunahme",
+                  "Juckreiz oder Blutung"
+            ]
+      },
+      {
+            "category": "Arthrose",
+            "terms": [
+                  "Gelenkschmerzen",
+                  "Anlaufschmerz",
+                  "Bewegungseinschränkung",
+                  "Gelenksteifigkeit",
+                  "Belastungsschmerz"
+            ]
+      },
+      {
+            "category": "Rheumatoide Arthritis",
+            "terms": [
+                  "Gelenkschmerzen",
+                  "Morgensteifigkeit",
+                  "geschwollene Gelenke",
+                  "Müdigkeit",
+                  "beidseitige Gelenkbeschwerden"
+            ]
+      },
+      {
+            "category": "Osteoporose",
+            "terms": [
+                  "Knochenbruch nach kleinem Sturz",
+                  "Rückenschmerzen",
+                  "Grössenverlust",
+                  "Rundrücken",
+                  "unsicherer Gang"
+            ]
+      },
+      {
+            "category": "Thrombose / Phlebothrombose",
+            "terms": [
+                  "einseitige Beinschwellung",
+                  "Wadenschmerz",
+                  "Überwärmung",
+                  "Spannungsgefühl",
+                  "Rötung"
+            ]
+      },
+      {
+            "category": "Inkontinenz",
+            "terms": [
+                  "ungewollter Urinverlust",
+                  "häufiger Harndrang",
+                  "Scham",
+                  "sozialer Rückzug",
+                  "Hautreizung"
+            ]
+      },
+      {
+            "category": "Hypertonie",
+            "terms": [
+                  "oft keine Symptome",
+                  "Kopfschmerzen",
+                  "Schwindel",
+                  "Nasenbluten",
+                  "Sehstörungen"
+            ]
+      },
+      {
+            "category": "Herzinsuffizienz",
+            "terms": [
+                  "Atemnot bei Belastung",
+                  "Beinödeme",
+                  "Müdigkeit",
+                  "nächtliche Atemnot",
+                  "eingeschränkte Leistungsfähigkeit"
+            ]
+      },
+      {
+            "category": "Koronare Herzkrankheit / Herzinfarkt",
+            "terms": [
+                  "Brustschmerz",
+                  "Atemnot",
+                  "Übelkeit",
+                  "Schweissausbruch",
+                  "Angst"
+            ]
+      },
+      {
+            "category": "Apoplexie / Stroke",
+            "terms": [
+                  "halbseitige Lähmung",
+                  "Sprachstörung",
+                  "hängender Mundwinkel",
+                  "Sehstörungen",
+                  "plötzliche Verwirrtheit"
+            ]
+      },
+      {
+            "category": "Depression",
+            "terms": [
+                  "gedrückte Stimmung",
+                  "Interessenverlust",
+                  "Antriebslosigkeit",
+                  "Schlafstörungen",
+                  "Appetitveränderung"
+            ]
+      },
+      {
+            "category": "Bipolare Störung",
+            "terms": [
+                  "depressive Phase",
+                  "gehobene Stimmung",
+                  "vermindertes Schlafbedürfnis",
+                  "Rededrang",
+                  "Impulsivität"
+            ]
+      },
+      {
+            "category": "Schizophrenie",
+            "terms": [
+                  "Halluzinationen",
+                  "Wahnvorstellungen",
+                  "sozialer Rückzug",
+                  "Antriebslosigkeit",
+                  "desorganisiertes Denken"
+            ]
+      },
+      {
+            "category": "Borderline-Persönlichkeitsstörung",
+            "terms": [
+                  "starke Stimmungsschwankungen",
+                  "Angst vor Verlassenwerden",
+                  "Impulsivität",
+                  "Selbstverletzung",
+                  "instabile Beziehungen"
+            ]
+      },
+      {
+            "category": "Angststörung",
+            "terms": [
+                  "Angst",
+                  "Herzrasen",
+                  "Atemnot",
+                  "Schweissausbruch",
+                  "Vermeidungsverhalten"
+            ]
+      },
+      {
+            "category": "Posttraumatische Belastungsstörung",
+            "terms": [
+                  "Flashbacks",
+                  "Albträume",
+                  "Schreckhaftigkeit",
+                  "Vermeidungsverhalten",
+                  "Schlafstörungen"
+            ]
+      },
+      {
+            "category": "Niereninsuffizienz",
+            "terms": [
+                  "Müdigkeit",
+                  "Übelkeit",
+                  "Beinödeme",
+                  "verminderte Urinmenge",
+                  "Juckreiz"
+            ]
+      },
+      {
+            "category": "PAVK",
+            "terms": [
+                  "Wadenschmerz beim Gehen",
+                  "Schmerz besser nach Pause",
+                  "kalte Füsse",
+                  "blasse Haut",
+                  "schlecht heilende Wunden"
+            ]
+      },
+      {
+            "category": "Diabetes mellitus Typ 1",
+            "terms": [
+                  "starker Durst",
+                  "häufiges Wasserlassen",
+                  "Gewichtsverlust",
+                  "Müdigkeit",
+                  "Übelkeit"
+            ]
+      },
+      {
+            "category": "Diabetes mellitus Typ 2",
+            "terms": [
+                  "Müdigkeit",
+                  "starker Durst",
+                  "häufiges Wasserlassen",
+                  "schlecht heilende Wunden",
+                  "Kribbeln in den Füssen"
+            ]
+      },
+      {
+            "category": "Metabolisches Syndrom",
+            "terms": [
+                  "bauchbetonte Gewichtszunahme",
+                  "erhöhter Blutdruck",
+                  "erhöhter Blutzucker",
+                  "erhöhte Blutfette",
+                  "oft keine Symptome"
+            ]
+      },
+      {
+            "category": "Tuberkulose",
+            "terms": [
+                  "anhaltender Husten",
+                  "Nachtschweiss",
+                  "Gewichtsverlust",
+                  "Fieber",
+                  "Müdigkeit"
+            ]
+      },
+      {
+            "category": "Multiple Sklerose",
+            "terms": [
+                  "Sehstörungen",
+                  "Kribbeln",
+                  "Muskelschwäche",
+                  "Gangunsicherheit",
+                  "Fatigue"
+            ]
+      },
+      {
+            "category": "Morbus Parkinson",
+            "terms": [
+                  "Tremor",
+                  "verlangsamte Bewegung",
+                  "Muskelsteifigkeit",
+                  "kleine Schritte",
+                  "Gleichgewichtsstörungen"
+            ]
+      },
+      {
+            "category": "COPD",
+            "terms": [
+                  "Atemnot bei Belastung",
+                  "chronischer Husten",
+                  "Auswurf",
+                  "pfeifende Atmung",
+                  "Leistungsminderung"
+            ]
+      },
+      {
+            "category": "Asthma bronchiale",
+            "terms": [
+                  "anfallsartige Atemnot",
+                  "pfeifende Atmung",
+                  "Husten",
+                  "Brustenge",
+                  "Atemnot bei Belastung"
+            ]
+      },
+      {
+            "category": "Pneumonie",
+            "terms": [
+                  "Fieber",
+                  "Husten",
+                  "Atemnot",
+                  "Brustschmerz",
+                  "Müdigkeit"
+            ]
+      },
+      {
+            "category": "Lungenembolie",
+            "terms": [
+                  "plötzliche Atemnot",
+                  "Brustschmerz",
+                  "Angst",
+                  "Herzrasen",
+                  "Husten"
+            ]
+      },
+      {
+            "category": "Schlafapnoe",
+            "terms": [
+                  "lautes Schnarchen",
+                  "Atempausen im Schlaf",
+                  "Tagesmüdigkeit",
+                  "Konzentrationsprobleme",
+                  "Kopfschmerzen"
+            ]
+      },
+      {
+            "category": "Mammakarzinom",
+            "terms": [
+                  "Knoten in der Brust",
+                  "Hautveränderung der Brust",
+                  "Einziehung der Brustwarze",
+                  "Ausfluss aus der Brustwarze",
+                  "Lymphknotenschwellung"
+            ]
+      },
+      {
+            "category": "Prostatakarzinom",
+            "terms": [
+                  "oft keine Symptome",
+                  "nächtliches Wasserlassen",
+                  "schwacher Harnstrahl",
+                  "häufiger Harndrang",
+                  "Blut im Urin"
+            ]
+      },
+      {
+            "category": "Morbus Crohn",
+            "terms": [
+                  "Bauchschmerzen",
+                  "Durchfall",
+                  "Gewichtsverlust",
+                  "Fieber",
+                  "Müdigkeit"
+            ]
+      },
+      {
+            "category": "Chronische Wunde / Ulcus cruris / Dekubitus",
+            "terms": [
+                  "offene Wunde",
+                  "schlecht heilende Wunden",
+                  "Wundschmerz",
+                  "Wundsekret",
+                  "Hautrötung"
+            ]
+      },
+      {
+            "category": "Demenz",
+            "terms": [
+                  "Gedächtnisstörungen",
+                  "Orientierungsstörungen",
+                  "Sprachstörung",
+                  "Persönlichkeitsveränderung",
+                  "Alltagsprobleme"
+            ]
+      },
+      {
+            "category": "Alzheimer-Demenz",
+            "terms": [
+                  "Gedächtnisstörungen",
+                  "Orientierungsstörungen",
+                  "Wortfindungsstörungen",
+                  "Alltagsprobleme",
+                  "Persönlichkeitsveränderung"
+            ]
+      },
+      {
+            "category": "Vaskuläre Demenz",
+            "terms": [
+                  "verlangsamtes Denken",
+                  "Gangunsicherheit",
+                  "Gedächtnisstörungen",
+                  "Stimmungsschwankungen",
+                  "plötzliche Verwirrtheit"
+            ]
+      },
+      {
+            "category": "Delir",
+            "terms": [
+                  "akute Verwirrtheit",
+                  "Aufmerksamkeitsstörung",
+                  "Halluzinationen",
+                  "Unruhe",
+                  "gestörter Schlaf-Wach-Rhythmus"
+            ]
+      },
+      {
+            "category": "Epilepsie",
+            "terms": [
+                  "Krampfanfall",
+                  "Bewusstseinsverlust",
+                  "Zuckungen",
+                  "Verwirrtheit nach dem Anfall",
+                  "Sturz"
+            ]
+      },
+      {
+            "category": "Abhängigkeitserkrankung / Sucht",
+            "terms": [
+                  "Kontrollverlust",
+                  "Craving",
+                  "Toleranzentwicklung",
+                  "Entzugssymptome",
+                  "sozialer Rückzug"
+            ]
+      },
+      {
+            "category": "Alkoholabhängigkeit",
+            "terms": [
+                  "Kontrollverlust",
+                  "Toleranzentwicklung",
+                  "Zittern",
+                  "Schwitzen",
+                  "Entzugssymptome"
+            ]
+      },
+      {
+            "category": "Medikamentenabhängigkeit",
+            "terms": [
+                  "Dosissteigerung",
+                  "Kontrollverlust",
+                  "Entzugssymptome",
+                  "Schlafstörungen",
+                  "innere Unruhe"
+            ]
+      },
+      {
+            "category": "Drogenabhängigkeit",
+            "terms": [
+                  "Craving",
+                  "Kontrollverlust",
+                  "Toleranzentwicklung",
+                  "Entzugssymptome",
+                  "Vernachlässigung von Pflichten"
+            ]
+      },
+      {
+            "category": "Essstörungen",
+            "terms": [
+                  "gestörtes Essverhalten",
+                  "starke Gewichtssorgen",
+                  "Scham",
+                  "sozialer Rückzug",
+                  "Körperbildstörung"
+            ]
+      },
+      {
+            "category": "Anorexia nervosa",
+            "terms": [
+                  "starker Gewichtsverlust",
+                  "Angst vor Gewichtszunahme",
+                  "Körperbildstörung",
+                  "restriktives Essen",
+                  "Kälteempfindlichkeit"
+            ]
+      },
+      {
+            "category": "Bulimia nervosa",
+            "terms": [
+                  "Essanfälle",
+                  "Erbrechen",
+                  "Scham",
+                  "Gewichtssorgen",
+                  "Zahnschäden"
+            ]
+      },
+      {
+            "category": "Binge-Eating-Disorder",
+            "terms": [
+                  "Essanfälle",
+                  "Kontrollverlust beim Essen",
+                  "Scham",
+                  "schnelles Essen",
+                  "Essen ohne Hunger"
+            ]
+      },
+      {
+            "category": "HIV / AIDS",
+            "terms": [
+                  "Fieber",
+                  "Nachtschweiss",
+                  "Gewichtsverlust",
+                  "erhöhte Infektanfälligkeit",
+                  "Lymphknotenschwellung"
+            ]
+      },
+      {
+            "category": "Sexuell übertragbare Infektionen",
+            "terms": [
+                  "oft keine Symptome",
+                  "Brennen beim Wasserlassen",
+                  "Ausfluss",
+                  "Juckreiz",
+                  "Unterbauchschmerzen"
+            ]
+      }
+];
+
+    const SYMPTOM_DIAGNOSES = {
+      "alltagsprobleme": [
+            "Demenz",
+            "Alzheimer-Demenz"
+      ],
+      "angst": [
+            "Koronare Herzkrankheit / Herzinfarkt",
+            "Angststörung",
+            "Lungenembolie"
+      ],
+      "antriebslosigkeit": [
+            "Depression",
+            "Schizophrenie"
+      ],
+      "atemnot": [
+            "Koronare Herzkrankheit / Herzinfarkt",
+            "Angststörung",
+            "Pneumonie"
+      ],
+      "atemnot bei belastung": [
+            "Adipositas",
+            "Herzinsuffizienz",
+            "COPD",
+            "Asthma bronchiale"
+      ],
+      "beinödeme": [
+            "Herzinsuffizienz",
+            "Niereninsuffizienz"
+      ],
+      "brustschmerz": [
+            "Koronare Herzkrankheit / Herzinfarkt",
+            "Pneumonie",
+            "Lungenembolie"
+      ],
+      "craving": [
+            "Abhängigkeitserkrankung / Sucht",
+            "Drogenabhängigkeit"
+      ],
+      "entzugssymptome": [
+            "Abhängigkeitserkrankung / Sucht",
+            "Alkoholabhängigkeit",
+            "Medikamentenabhängigkeit",
+            "Drogenabhängigkeit"
+      ],
+      "erhöhte infektanfälligkeit": [
+            "Mangelernährung / Malnutrition",
+            "HIV / AIDS"
+      ],
+      "essanfälle": [
+            "Bulimia nervosa",
+            "Binge-Eating-Disorder"
+      ],
+      "fieber": [
+            "Tuberkulose",
+            "Pneumonie",
+            "Morbus Crohn",
+            "HIV / AIDS"
+      ],
+      "gangunsicherheit": [
+            "Multiple Sklerose",
+            "Vaskuläre Demenz"
+      ],
+      "gedächtnisstörungen": [
+            "Demenz",
+            "Alzheimer-Demenz",
+            "Vaskuläre Demenz"
+      ],
+      "gelenkschmerzen": [
+            "Adipositas",
+            "Arthrose",
+            "Rheumatoide Arthritis"
+      ],
+      "gewichtsverlust": [
+            "Mangelernährung / Malnutrition",
+            "Dysphagie",
+            "Diabetes mellitus Typ 1",
+            "Tuberkulose",
+            "Morbus Crohn",
+            "HIV / AIDS",
+            "Anorexia nervosa"
+      ],
+      "halluzinationen": [
+            "Schizophrenie",
+            "Delir"
+      ],
+      "herzrasen": [
+            "Angststörung",
+            "Lungenembolie"
+      ],
+      "husten": [
+            "Asthma bronchiale",
+            "Pneumonie",
+            "Lungenembolie"
+      ],
+      "häufiger harndrang": [
+            "Inkontinenz",
+            "Prostatakarzinom"
+      ],
+      "häufiges wasserlassen": [
+            "Diabetes mellitus Typ 1",
+            "Diabetes mellitus Typ 2"
+      ],
+      "impulsivität": [
+            "Bipolare Störung",
+            "Borderline-Persönlichkeitsstörung"
+      ],
+      "juckreiz": [
+            "Niereninsuffizienz",
+            "Sexuell übertragbare Infektionen",
+            "Melanom"
+      ],
+      "kontrollverlust": [
+            "Abhängigkeitserkrankung / Sucht",
+            "Alkoholabhängigkeit",
+            "Medikamentenabhängigkeit",
+            "Drogenabhängigkeit"
+      ],
+      "kopfschmerzen": [
+            "Hypertonie",
+            "Schlafapnoe"
+      ],
+      "körperbildstörung": [
+            "Essstörungen",
+            "Anorexia nervosa"
+      ],
+      "lymphknotenschwellung": [
+            "Mammakarzinom",
+            "HIV / AIDS"
+      ],
+      "muskelschwäche": [
+            "Mangelernährung / Malnutrition",
+            "Multiple Sklerose"
+      ],
+      "müdigkeit": [
+            "Mangelernährung / Malnutrition",
+            "Rheumatoide Arthritis",
+            "Herzinsuffizienz",
+            "Niereninsuffizienz",
+            "Diabetes mellitus Typ 1",
+            "Diabetes mellitus Typ 2",
+            "Tuberkulose",
+            "Pneumonie",
+            "Morbus Crohn"
+      ],
+      "nachtschweiss": [
+            "Tuberkulose",
+            "HIV / AIDS"
+      ],
+      "oft keine symptome": [
+            "Hypertonie",
+            "Metabolisches Syndrom",
+            "Prostatakarzinom",
+            "Sexuell übertragbare Infektionen"
+      ],
+      "orientierungsstörungen": [
+            "Demenz",
+            "Alzheimer-Demenz"
+      ],
+      "persönlichkeitsveränderung": [
+            "Demenz",
+            "Alzheimer-Demenz"
+      ],
+      "pfeifende atmung": [
+            "COPD",
+            "Asthma bronchiale"
+      ],
+      "plötzliche verwirrtheit": [
+            "Apoplexie / Stroke",
+            "Vaskuläre Demenz"
+      ],
+      "scham": [
+            "Inkontinenz",
+            "Essstörungen",
+            "Bulimia nervosa",
+            "Binge-Eating-Disorder"
+      ],
+      "schlafstörungen": [
+            "Depression",
+            "Posttraumatische Belastungsstörung",
+            "Medikamentenabhängigkeit"
+      ],
+      "schlecht heilende wunden": [
+            "PAVK",
+            "Diabetes mellitus Typ 2",
+            "Chronische Wunde / Ulcus cruris / Dekubitus"
+      ],
+      "schweissausbruch": [
+            "Koronare Herzkrankheit / Herzinfarkt",
+            "Angststörung"
+      ],
+      "schweissausbruch / schwitzen": [
+            "Koronare Herzkrankheit / Herzinfarkt",
+            "Angststörung",
+            "Alkoholabhängigkeit"
+      ],
+      "sehstörungen": [
+            "Hypertonie",
+            "Apoplexie / Stroke",
+            "Multiple Sklerose"
+      ],
+      "sozialer rückzug": [
+            "Inkontinenz",
+            "Schizophrenie",
+            "Abhängigkeitserkrankung / Sucht",
+            "Essstörungen"
+      ],
+      "sprachstörung": [
+            "Apoplexie / Stroke",
+            "Demenz"
+      ],
+      "starker durst": [
+            "Diabetes mellitus Typ 1",
+            "Diabetes mellitus Typ 2"
+      ],
+      "toleranzentwicklung": [
+            "Abhängigkeitserkrankung / Sucht",
+            "Alkoholabhängigkeit",
+            "Drogenabhängigkeit"
+      ],
+      "vermeidungsverhalten": [
+            "Angststörung",
+            "Posttraumatische Belastungsstörung"
+      ],
+      "übelkeit": [
+            "Koronare Herzkrankheit / Herzinfarkt",
+            "Niereninsuffizienz",
+            "Diabetes mellitus Typ 1"
+      ]
+};
+
+    const GAME_SEMESTERS = {"Diagnosen": DIAGNOSIS_DATA};
+
+    let currentSemester = "Diagnosen";
+    let GAME_DATA = DIAGNOSIS_DATA.filter(cat => cat.terms.length > 1);
+
+    const ROWS = 7;
+    const COLS = 7;
+    const boardEl = document.getElementById("board");
+    const scoreEl = document.getElementById("score");
+    const comboEl = document.getElementById("combo");
+    const targetEl = document.getElementById("targetCategory");
+    const modal = document.getElementById("rulesModal");
+    const semesterModal = document.getElementById("semesterModal");
+    const semesterGrid = document.getElementById("semesterGrid");
+    const closeRulesBtn = document.getElementById("closeRulesBtn");
+    const helpBtn = document.getElementById("helpBtn");
+    const newGameBtn = document.getElementById("newGameBtn");
+    const bombBtn = document.getElementById("bombBtn");
+    const semesterBtn = document.getElementById("semesterBtn");
+    const semesterStatEl = document.getElementById("semesterStat");
+    const pointsProgressEl = document.getElementById("pointsProgress");
+    const pointsFillEl = document.getElementById("pointsFill");
+
+    let board = [];
+    let targetCategory = "";
+    let score = 0;
+    let combo = 0;
+    let selecting = false;
+    let locked = true;
+    let selected = [];
+    let audioCtx = null;
+    let nextId = 1;
+    let bombsLeft = 2;
+    let bombArmed = false;
+    const DROP_DURATION = 820;
+    const ACTIVE_CATEGORY_COUNT = 6;
+    const CLUSTER_CHANCE = 0.52;
+    const SHARED_SYMPTOM_CHANCE = 0.18;
+    const SHUFFLE_THRESHOLD = 50;
+    const GOLDEN_CHANCE_INITIAL = 0.34;
+    const GOLDEN_CHANCE_AFTER_DROP = 0.22;
+    let activeCategories = [];
+    let nextShuffleScore = SHUFFLE_THRESHOLD;
+    let categoryColorMap = new Map();
+
+    const DISTINCT_COLOR_SLOTS = [
+      { name:"Rot", hue:2 },
+      { name:"Orange", hue:28 },
+      { name:"Gelb", hue:55 },
+      { name:"Grün", hue:138 },
+      { name:"Türkis", hue:188 },
+      { name:"Pink", hue:328 }
+    ];
+
+    boardEl.style.setProperty("--cols", COLS);
+
+    function wait(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+    function rand(max){ return Math.floor(Math.random() * max); }
+    function randomFrom(arr){ return arr[rand(arr.length)]; }
+
+    function categoryHue(category){
+      const slot = categoryColorMap.get(category);
+      if(slot) return slot.hue;
+
+      // Fallback nur für Sonderfälle ausserhalb der aktiven Runde.
+      const total = Math.max(1, GAME_DATA.length);
+      const index = Math.max(0, GAME_DATA.findIndex(cat => cat.category === category));
+      return DISTINCT_COLOR_SLOTS[index % DISTINCT_COLOR_SLOTS.length].hue;
+    }
+
+    function assignCategoryColors(){
+      categoryColorMap = new Map();
+
+      // Diese Reihenfolge nutzt bewusst klar getrennte Farbfamilien.
+      // Dadurch gibt es keine zwei fast gleichen Grüntöne und keine Blau/Violett-Kombination.
+      const slots = shuffleCopy(DISTINCT_COLOR_SLOTS);
+      activeCategories.forEach((cat, index) => {
+        categoryColorMap.set(cat.category, slots[index % slots.length]);
+      });
+    }
+
+    function symptomKey(term){
+      return String(term || "").trim().toLowerCase();
+    }
+
+    function uniqueValues(values){
+      const seen = new Set();
+      const result = [];
+      for(const value of values){
+        if(!value || seen.has(value)) continue;
+        seen.add(value);
+        result.push(value);
+      }
+      return result;
+    }
+
+    function diagnosesForSymptom(term, primaryDiagnosis){
+      const mapped = SYMPTOM_DIAGNOSES[symptomKey(term)] || [primaryDiagnosis];
+      return uniqueValues([primaryDiagnosis, ...mapped]);
+    }
+
+    function activeDiagnosisSet(){
+      return new Set(activePool().map(cat => cat.category));
+    }
+
+    function itemMatchingActiveDiagnoses(item){
+      if(!item) return [];
+      const active = activeDiagnosisSet();
+      const matches = (item.diagnoses || [item.category]).filter(diagnosis => active.has(diagnosis));
+      return matches.length ? uniqueValues(matches) : [item.category];
+    }
+
+    function itemMatchesTarget(item, diagnosis){
+      return !!item && (item.diagnoses || [item.category]).includes(diagnosis);
+    }
+
+    function multiGradientForDiagnoses(diagnoses){
+      const list = diagnoses.length ? diagnoses : ["Diagnose"];
+      if(list.length === 1){
+        return `conic-gradient(from -20deg, hsl(${categoryHue(list[0])} 88% 61%) 0deg 360deg)`;
+      }
+
+      // Schmale helle Trennlinien machen geteilte Kugeln klarer erkennbar.
+      const slice = 360 / list.length;
+      const segments = [];
+      list.forEach((diagnosis, index) => {
+        const from = Math.round(index * slice * 10) / 10;
+        const to = Math.round((index + 1) * slice * 10) / 10;
+        const sep = Math.min(3.2, slice * 0.08);
+        const color = `hsl(${categoryHue(diagnosis)} 88% 61%)`;
+        segments.push(`${color} ${from}deg ${Math.max(from, to - sep)}deg`);
+        segments.push(`rgba(255,255,255,.82) ${Math.max(from, to - sep)}deg ${to}deg`);
+      });
+      return `conic-gradient(from -20deg, ${segments.join(", ")})`;
+    }
+
+    function escapeHTML(value){
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#039;"
+      }[char]));
+    }
+
+    function splitTerm(term){
+      const manual = {
+        "Wäschekreis":"Wäsche-\nkreis",
+        "Wäschekreislauf":"Wäsche-\nkreislauf",
+        "Reparaturen":"Repara-\nturen",
+        "Berufsgeheimnis":"Berufs-\ngeheimnis",
+        "Körperpflege":"Körper-\npflege",
+        "Hautpflege":"Haut-\npflege",
+        "Hauttypen":"Haut-\ntypen",
+        "Hautturgor":"Haut-\nturgor",
+        "Hautschuppen":"Haut-\nschuppen",
+        "Pflegeprozess":"Pflege-\nprozess",
+        "Pflegeplanung":"Pflege-\nplanung",
+        "Pflegestandards":"Pflege-\nstandards",
+        "Schlafprotokoll":"Schlaf-\nprotokoll",
+        "Schmerztherapie":"Schmerz-\ntherapie",
+        "Schmerzphysio":"Schmerz-\nphysio",
+        "Schmerzskala":"Schmerz-\nskala",
+        "Notfallnummern":"Notfall-\nnummern",
+        "Notfallkonzept":"Notfall-\nkonzept",
+        "Mangelernährung":"Mangel-\nernährung",
+        "Nahrungskarenz":"Nahrungs-\nkarenz",
+        "Verdauungstrakt":"Verdauungs-\ntrakt",
+        "Lebensmittelpyramide":"Lebensmittel-\npyramide",
+        "Beziehungskrise":"Beziehungs-\nkrise",
+        "Leistungskrise":"Leistungs-\nkrise",
+        "Suizidgefahr":"Suizid-\ngefahr",
+        "Suizidgedanke":"Suizid-\ngedanke",
+        "Suizidabsicht":"Suizid-\nabsicht",
+        "Entzugssyndrom":"Entzugs-\nsyndrom",
+        "Alkoholdelir":"Alkohol-\ndelir",
+        "Palliative Care":"Palliative\nCare",
+        "Morbus Parkinson":"Morbus\nParkinson",
+        "Morbus Crohn":"Morbus\nCrohn",
+        "Multiple Sklerose":"Multiple\nSklerose",
+        "Diabetes Typ 1":"Diabetes\nTyp 1",
+        "Diabetes Typ 2":"Diabetes\nTyp 2",
+        "Metab. Syndrom":"Metab.\nSyndrom"
+      };
+      if(manual[term]) return manual[term];
+
+      if(term.length <= 9) return term;
+
+      if(/[\/]/.test(term)){
+        const parts = term.split(/([\/])/);
+        let first = "";
+        let second = "";
+        parts.forEach((part, i) => {
+          if(i < 2) first += part;
+          else second += part;
+        });
+        return second ? `${first}\n${second}` : term;
+      }
+
+      if(term.includes(" ")){
+        const words = term.split(" ");
+        const middle = Math.ceil(words.length / 2);
+        return `${words.slice(0, middle).join(" ")}\n${words.slice(middle).join(" ")}`;
+      }
+
+      if(term.includes("-")){
+        const hyphenIndex = term.indexOf("-");
+        if(hyphenIndex >= 3 && hyphenIndex <= term.length - 4){
+          return `${term.slice(0, hyphenIndex + 1)}\n${term.slice(hyphenIndex + 1)}`;
+        }
+      }
+
+      const lower = term.toLowerCase();
+      const compoundEndings = [
+        "pflege", "hygiene", "proph.", "proph", "störung", "stör.", "therapie", "diagnose", "prozess", "planung", "system", "mittel", "zeichen", "kreis", "kreislauf", "transport", "bewegung", "schicht", "substanz", "krankheit", "krankh.", "funktion", "leitung", "infektion"
+      ];
+      for(const ending of compoundEndings){
+        if(lower.endsWith(ending) && term.length - ending.length >= 4){
+          const at = term.length - ending.length;
+          return `${term.slice(0, at)}-\n${term.slice(at)}`;
+        }
+      }
+
+      const splitAt = Math.min(term.length - 4, Math.max(4, Math.round(term.length * 0.58)));
+      return `${term.slice(0, splitAt)}-\n${term.slice(splitAt)}`;
+    }
+
+    function termHTML(term){
+      return `<span class="termText">${splitTerm(term).split("\n").map(part => `<span class="term-line">${escapeHTML(part)}</span>`).join("")}</span>`;
+    }
+
+    function shuffleCopy(arr){
+      return [...arr].sort(() => Math.random() - 0.5);
+    }
+
+    function pickActiveCategories(avoidCurrent = false){
+      if(!GAME_DATA.length){
+        activeCategories = [];
+        categoryColorMap = new Map();
+        return;
+      }
+      const count = Math.min(ACTIVE_CATEGORY_COUNT, GAME_DATA.length);
+      const currentNames = new Set(activeCategories.map(cat => cat.category));
+      const shuffled = shuffleCopy(GAME_DATA);
+
+      if(avoidCurrent && GAME_DATA.length > count && currentNames.size){
+        const preferred = shuffled.filter(cat => !currentNames.has(cat.category));
+        const fallback = shuffled.filter(cat => currentNames.has(cat.category));
+        activeCategories = [...preferred, ...fallback].slice(0, count);
+      }else{
+        activeCategories = shuffled.slice(0, count);
+      }
+
+      assignCategoryColors();
+    }
+
+    function activePool(){
+      return activeCategories.length ? activeCategories : GAME_DATA;
+    }
+
+    function getActiveCategoryByName(categoryName){
+      return activePool().find(cat => cat.category === categoryName);
+    }
+
+    function randomActiveCategory(row = null, col = null){
+      const pool = activePool();
+
+      // Damit häufiger spielbare Nachbarschaften entstehen, werden neue Kugeln
+      // mit etwas Wahrscheinlichkeit an eine bereits angrenzende Kategorie angelehnt.
+      if(row !== null && col !== null && Math.random() < CLUSTER_CHANCE){
+        const neighbours = [];
+        const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+        for(const [dr, dc] of dirs){
+          const item = board[row + dr]?.[col + dc];
+          if(!item) continue;
+          for(const diagnosis of itemMatchingActiveDiagnoses(item)){
+            const cat = getActiveCategoryByName(diagnosis);
+            if(cat) neighbours.push(cat);
+          }
+        }
+        if(neighbours.length) return randomFrom(neighbours);
+      }
+
+      return randomFrom(pool);
+    }
+
+    function activeMatchesForTerm(term, primaryDiagnosis){
+      const active = activeDiagnosisSet();
+      return diagnosesForSymptom(term, primaryDiagnosis).filter(diagnosis => active.has(diagnosis));
+    }
+
+    function randomTermForCategory(cat){
+      // Gemeinsame Symptome sind spannend, sollen aber nicht das ganze Feld dominieren.
+      // Darum bevorzugen neue Kugeln meistens eindeutige Symptome der Diagnose.
+      const uniqueTerms = [];
+      const sharedTerms = [];
+
+      for(const term of cat.terms){
+        const matches = activeMatchesForTerm(term, cat.category);
+        if(matches.length > 1) sharedTerms.push(term);
+        else uniqueTerms.push(term);
+      }
+
+      if(uniqueTerms.length && sharedTerms.length){
+        return Math.random() < SHARED_SYMPTOM_CHANCE ? randomFrom(sharedTerms) : randomFrom(uniqueTerms);
+      }
+
+      return randomFrom(uniqueTerms.length ? uniqueTerms : cat.terms);
+    }
+
+    function makeBall(row = null, col = null){
+      const cat = randomActiveCategory(row, col);
+      const term = randomTermForCategory(cat);
+      const diagnoses = diagnosesForSymptom(term, cat.category);
+      return { id: nextId++, category: cat.category, diagnoses, term, fresh: true };
+    }
+
+    function boardCells(){
+      const cells = [];
+      for(let r=0;r<ROWS;r++){
+        for(let c=0;c<COLS;c++){
+          if(board[r]?.[c]) cells.push({row:r, col:c, item:board[r][c]});
+        }
+      }
+      return cells;
+    }
+
+    function hasGoldenBall(){
+      return boardCells().some(cell => cell.item.bonus);
+    }
+
+    function maybePlaceGoldenBall(chance = GOLDEN_CHANCE_AFTER_DROP){
+      if(!board.length || hasGoldenBall() || Math.random() > chance) return;
+      const cells = boardCells();
+      if(!cells.length) return;
+      const simpleCells = cells.filter(cell => itemMatchingActiveDiagnoses(cell.item).length <= 1);
+      const choice = randomFrom(simpleCells.length ? simpleCells : cells);
+      choice.item.bonus = true;
+    }
+
+    function fairyDustHTML(){
+      return '<span class="fairy-dust fd1"></span><span class="fairy-dust fd2"></span><span class="fairy-dust fd3"></span><span class="fairy-dust fd4"></span>';
+    }
+
+    function pointsForCells(cells, normalValue = 1){
+      const seen = new Set();
+      let total = 0;
+      for(const {row, col} of cells){
+        const key = `${row}:${col}`;
+        if(seen.has(key)) continue;
+        seen.add(key);
+        const item = board[row]?.[col];
+        if(!item) continue;
+        total += item.bonus ? 5 : normalValue;
+      }
+      return total;
+    }
+
+    function addScore(points){
+      score += points;
+      updateStats();
+    }
+
+    async function shuffleWithNewCategories(){
+      pickActiveCategories(true);
+      board = Array.from({length: ROWS}, (_, r) => Array.from({length: COLS}, (_, c) => makeBall(r, c)));
+      maybePlaceGoldenBall(GOLDEN_CHANCE_INITIAL);
+      chooseTarget();
+      render();
+      updateStats();
+      showToast("Neue Kategorien!");
+      playShuffle();
+      await wait(720);
+    }
+
+    async function maybeShuffleAfterPoints(){
+      if(score < nextShuffleScore) return false;
+      while(score >= nextShuffleScore){
+        nextShuffleScore += SHUFFLE_THRESHOLD;
+      }
+      await shuffleWithNewCategories();
+      return true;
+    }
+
+    function setSemester(semester){
+      currentSemester = semester;
+      GAME_DATA = (GAME_SEMESTERS[semester] || []).filter(cat => cat.terms.length > 1);
+      semesterStatEl.textContent = "6 aktiv";
+      newGame();
+      semesterModal.classList.add("hidden");
+      showToast(semester);
+    }
+
+    function populateSemesterButtons(){
+      semesterGrid.innerHTML = "";
+      Object.entries(GAME_SEMESTERS).forEach(([semester, cats]) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "semester-choice";
+        const playableCats = cats.filter(cat => cat.terms.length > 1);
+        const termCount = playableCats.reduce((sum, cat) => sum + cat.terms.length, 0);
+        btn.innerHTML = `${semester}<small>${playableCats.length} Kategorien · ${termCount} Begriffe</small>`;
+        btn.addEventListener("click", () => {
+          unlockAudio();
+          setSemester(semester);
+        });
+        semesterGrid.appendChild(btn);
+      });
+    }
+
+    function newGame(){
+      if(!GAME_DATA.length){
+        locked = true;
+        targetEl.textContent = "Keine Diagnosen";
+        semesterModal.classList.remove("hidden");
+        return;
+      }
+      score = 0;
+      combo = 0;
+      nextId = 1;
+      nextShuffleScore = SHUFFLE_THRESHOLD;
+      selected = [];
+      locked = false;
+      bombsLeft = 2;
+      bombArmed = false;
+      pickActiveCategories();
+      board = Array.from({length: ROWS}, (_, r) => Array.from({length: COLS}, (_, c) => makeBall(r, c)));
+      maybePlaceGoldenBall(GOLDEN_CHANCE_INITIAL);
+      chooseTarget();
+      render();
+      updateStats();
+    }
+
+    function chooseTarget(){
+      const counts = new Map();
+      for(const {item} of boardCells()){
+        for(const diagnosis of itemMatchingActiveDiagnoses(item)){
+          counts.set(diagnosis, (counts.get(diagnosis) || 0) + 1);
+        }
+      }
+
+      const pool = activePool();
+      const adjacentCandidates = pool.filter(cat => findGroupsForDiagnosis(cat.category, 2).length > 0);
+      const visibleCandidates = pool.filter(cat => (counts.get(cat.category) || 0) >= 2);
+
+      // Ziel ist bevorzugt eine Diagnose, für die bereits mindestens 2 passende Symptome berührend im Feld liegen.
+      targetCategory = randomFrom(adjacentCandidates.length ? adjacentCandidates : (visibleCandidates.length ? visibleCandidates : pool)).category;
+      targetEl.textContent = targetCategory;
+    }
+
+    function updateStats(){
+      scoreEl.textContent = score;
+      comboEl.textContent = combo;
+
+      const lowerLimit = nextShuffleScore - SHUFFLE_THRESHOLD;
+      const progressPoints = Math.max(0, Math.min(SHUFFLE_THRESHOLD, score - lowerLimit));
+      const percent = Math.round((progressPoints / SHUFFLE_THRESHOLD) * 100);
+      if(pointsProgressEl) pointsProgressEl.textContent = `${progressPoints}/${SHUFFLE_THRESHOLD}`;
+      if(pointsFillEl) pointsFillEl.style.width = `${percent}%`;
+
+      updateBombButton();
+    }
+
+    function updateBombButton(){
+      bombBtn.textContent = `💣 Bombe ${bombsLeft}x`;
+      bombBtn.classList.toggle("armed", bombArmed && bombsLeft > 0);
+      bombBtn.classList.toggle("disabled", bombsLeft <= 0);
+      bombBtn.disabled = bombsLeft <= 0;
+    }
+
+    function render(allowSpawn = true){
+      boardEl.innerHTML = "";
+      for(let r=0;r<ROWS;r++){
+        for(let c=0;c<COLS;c++){
+          const item = board[r][c];
+          const btn = document.createElement("button");
+          btn.type = "button";
+          const classes = ["ball"];
+          if(allowSpawn && item && item.fresh) classes.push("spawn");
+          if(item?.bonus) classes.push("golden-special");
+
+          const matchingDiagnoses = item ? itemMatchingActiveDiagnoses(item) : [];
+          if(item && matchingDiagnoses.length > 1) classes.push("multi-diagnosis");
+
+          btn.className = classes.join(" ");
+          if(item && item.term.length > 16) btn.classList.add("long");
+          if(item && item.term.length > 22) btn.classList.add("tiny");
+          btn.dataset.row = r;
+          btn.dataset.col = c;
+          btn.dataset.id = item ? item.id : "";
+          btn.dataset.category = item ? item.category : "";
+          if(item){
+            const firstDiagnosis = matchingDiagnoses[0] || item.category;
+            btn.style.setProperty("--ball-h", categoryHue(firstDiagnosis));
+            if(matchingDiagnoses.length > 1){
+              btn.style.setProperty("--multi-bg", multiGradientForDiagnoses(matchingDiagnoses));
+              btn.title = `${item.term} → ${matchingDiagnoses.join(", ")}`;
+            }
+            btn.innerHTML = termHTML(item.term) + (item.bonus ? fairyDustHTML() : "");
+            btn.dataset.bonus = item.bonus ? "true" : "";
+            btn.dataset.diagnoses = (item.diagnoses || [item.category]).join("|");
+          }else{
+            btn.textContent = "";
+          }
+          btn.setAttribute("aria-label", item ? `${item.term}, passt zu: ${(item.diagnoses || [item.category]).join(", ")}` : "Leeres Feld");
+          boardEl.appendChild(btn);
+          if(item) item.fresh = false;
+        }
+      }
+    }
+
+    function getCellEl(row, col){
+      return boardEl.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+    }
+
+    function cellFromPoint(x, y){
+      const el = document.elementFromPoint(x, y);
+      if(!el) return null;
+      const ball = el.closest(".ball");
+      if(!ball || !boardEl.contains(ball)) return null;
+      const row = Number(ball.dataset.row);
+      const col = Number(ball.dataset.col);
+      if(Number.isNaN(row) || Number.isNaN(col)) return null;
+      return { row, col, el: ball };
+    }
+
+    function alreadySelected(row, col){
+      return selected.some(p => p.row === row && p.col === col);
+    }
+
+    function addSelection(row, col){
+      if(locked || alreadySelected(row, col)) return;
+      const item = board[row]?.[col];
+      if(!item) return;
+      selected.push({row, col});
+      getCellEl(row,col)?.classList.add("selected");
+      playSelect();
+    }
+
+    function clearSelection(){
+      selected.forEach(({row,col}) => getCellEl(row,col)?.classList.remove("selected"));
+      selected = [];
+    }
+
+    boardEl.addEventListener("pointerdown", ev => {
+      if(locked || !GAME_DATA.length) return;
+      unlockAudio();
+      const cell = cellFromPoint(ev.clientX, ev.clientY);
+      if(bombArmed){
+        selecting = false;
+        if(cell) useBomb(cell.row, cell.col);
+        return;
+      }
+      selecting = true;
+      selected = [];
+      boardEl.setPointerCapture?.(ev.pointerId);
+      if(cell) addSelection(cell.row, cell.col);
+    });
+
+    boardEl.addEventListener("pointermove", ev => {
+      if(!selecting || locked) return;
+      const cell = cellFromPoint(ev.clientX, ev.clientY);
+      if(cell) addSelection(cell.row, cell.col);
+    });
+
+    boardEl.addEventListener("pointerup", finalizeSelection);
+    boardEl.addEventListener("pointercancel", finalizeSelection);
+    boardEl.addEventListener("lostpointercapture", () => { if(selecting) finalizeSelection(); });
+
+    async function finalizeSelection(){
+      if(!selecting || locked) return;
+      selecting = false;
+      if(selected.length < 2){
+        clearSelection();
+        showToast("Mindestens 2!");
+        playError();
+        return;
+      }
+
+      const wrong = selected.filter(({row,col}) => !itemMatchesTarget(board[row][col], targetCategory));
+      if(wrong.length){
+        score -= 1;
+        combo = 0;
+        updateStats();
+        wrong.forEach(({row,col}) => getCellEl(row,col)?.classList.add("bad"));
+        playError();
+        showToast("−1");
+        await wait(800);
+        selected.forEach(({row,col}) => {
+          const el = getCellEl(row,col);
+          el?.classList.remove("selected","bad");
+        });
+        selected = [];
+        return;
+      }
+
+      locked = true;
+      const basePoints = (selected.length - 1) * 2;
+      const goldenPoints = pointsForCells(selected, 0);
+      const points = basePoints + goldenPoints;
+      addScore(points);
+      combo += 1;
+      updateStats();
+      showToast(goldenPoints ? `+${points} ✨` : `+${points}`);
+      playMatch(selected.length);
+      await explodeCells([...selected], targetCategory, false);
+      selected = [];
+      await collapseAndFillAnimated();
+      await resolveChainReactions();
+      const shuffled = await maybeShuffleAfterPoints();
+      if(!shuffled) chooseTarget();
+      locked = false;
+    }
+
+    async function useBomb(row, col){
+      if(locked || bombsLeft <= 0 || !bombArmed) return;
+      locked = true;
+      selecting = false;
+      clearSelection();
+      bombArmed = false;
+      bombsLeft -= 1;
+      updateStats();
+
+      const cells = [];
+      for(let r=row-1;r<=row+1;r++){
+        for(let c=col-1;c<=col+1;c++){
+          if(r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c]){
+            cells.push({row:r,col:c});
+          }
+        }
+      }
+
+      const points = pointsForCells(cells, 1);
+      addScore(points);
+      combo += 1;
+      updateStats();
+      showToast(`💣 +${points}`);
+      playBomb();
+      await explodeCells(cells, "Bombe", false);
+      await collapseAndFillAnimated();
+      await resolveChainReactions();
+      const shuffled = await maybeShuffleAfterPoints();
+      if(!shuffled) chooseTarget();
+      locked = false;
+      updateStats();
+    }
+
+    async function explodeCells(cells, categoryName, chain){
+      const validCells = cells.filter(({row,col}) => board[row]?.[col]);
+      if(!validCells.length) return;
+
+      validCells.forEach(({row,col}) => {
+        const el = getCellEl(row,col);
+        if(!el) return;
+        el.classList.remove("selected");
+        el.classList.add("exploding");
+        burstAtElement(el, chain ? "chain" : "gold");
+      });
+
+      if(chain){
+        playChain(validCells.length);
+      }
+
+      await wait(360);
+      validCells.forEach(({row,col}) => { board[row][col] = null; });
+    }
+
+    function collapseAndFill(){
+      for(let c=0;c<COLS;c++){
+        const survivors = [];
+        for(let r=ROWS-1;r>=0;r--){
+          if(board[r][c]) survivors.push(board[r][c]);
+        }
+        for(let r=ROWS-1;r>=0;r--){
+          board[r][c] = survivors.shift() || makeBall(r, c);
+        }
+      }
+      maybePlaceGoldenBall(GOLDEN_CHANCE_AFTER_DROP);
+    }
+
+    function capturePositions(){
+      const positions = new Map();
+      boardEl.querySelectorAll(".ball[data-id]").forEach(el => {
+        const id = Number(el.dataset.id);
+        if(id) positions.set(id, el.getBoundingClientRect());
+      });
+      return positions;
+    }
+
+    async function collapseAndFillAnimated(){
+      const before = capturePositions();
+      collapseAndFill();
+      render(false);
+
+      const animations = [];
+      boardEl.querySelectorAll(".ball[data-id]").forEach(el => {
+        const id = Number(el.dataset.id);
+        const after = el.getBoundingClientRect();
+        const previous = before.get(id);
+
+        if(previous){
+          const dx = previous.left - after.left;
+          const dy = previous.top - after.top;
+          if(Math.abs(dx) > 1 || Math.abs(dy) > 1){
+            const distance = Math.abs(dy) + Math.abs(dx);
+            const duration = DROP_DURATION + Math.min(260, distance * 1.25);
+            const anim = el.animate([
+              { transform:`translate(${dx}px, ${dy}px) translateZ(16px)`, filter:"brightness(1.05)", offset:0 },
+              { transform:"translate(0px, 0px) translateZ(16px)", filter:"brightness(1)", offset:1 }
+            ], {
+              duration,
+              easing:"cubic-bezier(.16,.84,.22,1)",
+              fill:"both"
+            });
+            animations.push(anim.finished.catch(() => {}));
+          }
+        }else{
+          const fallDistance = Math.max(140, after.top + after.height + 90);
+          const delay = Math.random() * 85;
+          const anim = el.animate([
+            { transform:`translate(0px, -${fallDistance}px) translateZ(16px) scale(.86)`, opacity:.15, offset:0 },
+            { transform:"translate(0px, 10px) translateZ(18px) scale(1.03)", opacity:1, offset:.82 },
+            { transform:"translate(0px, 0px) translateZ(16px) scale(1)", opacity:1, offset:1 }
+          ], {
+            duration:DROP_DURATION + 260,
+            delay,
+            easing:"cubic-bezier(.17,.78,.18,1)",
+            fill:"both"
+          });
+          animations.push(anim.finished.catch(() => {}));
+        }
+      });
+
+      if(animations.length){
+        playDrop();
+        await Promise.all(animations);
+      }else{
+        await wait(DROP_DURATION);
+      }
+    }
+
+    async function resolveChainReactions(){
+      // Nach dem Nachrutschen darf höchstens eine Kettenreaktion ausgelöst werden.
+      // Damit das seltener und klarer bleibt, zählen erst Gruppen ab 6 passenden Symptomen.
+      const groups = [];
+      for(const cat of activePool()){
+        if(cat.category === targetCategory) continue;
+        for(const group of findGroupsForDiagnosis(cat.category, 6)){
+          groups.push({diagnosis: cat.category, cells: group});
+        }
+      }
+
+      if(!groups.length) return;
+
+      const flattened = [];
+      const seen = new Set();
+      for(const groupInfo of groups){
+        for(const cell of groupInfo.cells){
+          const key = `${cell.row}:${cell.col}`;
+          if(!seen.has(key)){
+            seen.add(key);
+            flattened.push(cell);
+          }
+        }
+        const center = averageCellPosition(groupInfo.cells);
+        if(center) flyText(groupInfo.diagnosis, center.x, center.y);
+      }
+
+      const gained = pointsForCells(flattened, 1);
+      addScore(gained);
+      combo += 1;
+      updateStats();
+      showToast(`Kette +${gained}`);
+      await explodeCells(flattened, "Kettenreaktion", true);
+      await collapseAndFillAnimated();
+      await wait(160);
+    }
+
+    function findGroupsForDiagnosis(diagnosis, minSize){
+      const visited = Array.from({length: ROWS}, () => Array(COLS).fill(false));
+      const groups = [];
+      const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+
+      for(let r=0;r<ROWS;r++){
+        for(let c=0;c<COLS;c++){
+          if(visited[r][c] || !itemMatchesTarget(board[r][c], diagnosis)) continue;
+          const stack = [{row:r,col:c}];
+          const group = [];
+          visited[r][c] = true;
+          while(stack.length){
+            const cur = stack.pop();
+            group.push(cur);
+            for(const [dr,dc] of dirs){
+              const nr = cur.row + dr;
+              const nc = cur.col + dc;
+              if(nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
+              if(visited[nr][nc] || !itemMatchesTarget(board[nr][nc], diagnosis)) continue;
+              visited[nr][nc] = true;
+              stack.push({row:nr,col:nc});
+            }
+          }
+          if(group.length >= minSize) groups.push(group);
+        }
+      }
+      return groups;
+    }
+
+    function findGroups(minSize){
+      const visited = Array.from({length: ROWS}, () => Array(COLS).fill(false));
+      const groups = [];
+      const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+
+      for(let r=0;r<ROWS;r++){
+        for(let c=0;c<COLS;c++){
+          if(visited[r][c] || !board[r][c]) continue;
+          const cat = board[r][c].category;
+          const stack = [{row:r,col:c}];
+          const group = [];
+          visited[r][c] = true;
+          while(stack.length){
+            const cur = stack.pop();
+            group.push(cur);
+            for(const [dr,dc] of dirs){
+              const nr = cur.row + dr;
+              const nc = cur.col + dc;
+              if(nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
+              if(visited[nr][nc] || !board[nr][nc] || board[nr][nc].category !== cat) continue;
+              visited[nr][nc] = true;
+              stack.push({row:nr,col:nc});
+            }
+          }
+          if(group.length >= minSize) groups.push(group);
+        }
+      }
+      return groups;
+    }
+
+    function averageCellPosition(cells){
+      const rects = cells.map(({row,col}) => getCellEl(row,col)?.getBoundingClientRect()).filter(Boolean);
+      if(!rects.length) return null;
+      const x = rects.reduce((sum,r) => sum + r.left + r.width/2, 0) / rects.length;
+      const y = rects.reduce((sum,r) => sum + r.top + r.height/2, 0) / rects.length;
+      return {x,y};
+    }
+
+    function showToast(text){
+      const el = document.createElement("div");
+      el.className = "toast";
+      el.textContent = text;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 950);
+    }
+
+    function flyText(text, x, y){
+      const el = document.createElement("div");
+      el.className = "flyText";
+      el.textContent = text;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    function burstAtElement(el, mode){
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const count = mode === "chain" ? 18 : 14;
+      for(let i=0;i<count;i++){
+        const p = document.createElement("span");
+        p.className = "particle";
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 34 + Math.random() * 62;
+        const x = Math.cos(angle) * distance;
+        const y = Math.sin(angle) * distance;
+        p.style.left = `${cx}px`;
+        p.style.top = `${cy}px`;
+        p.style.setProperty("--x", `${x}px`);
+        p.style.setProperty("--y", `${y}px`);
+        if(mode === "chain"){
+          p.style.background = "radial-gradient(circle at 30% 30%,#fff,#83ffff 38%,#7b43ff 100%)";
+          p.style.boxShadow = "0 0 12px rgba(131,255,255,.78)";
+        }
+        p.style.animationDuration = `${.48 + Math.random() * .45}s`;
+        p.style.width = p.style.height = `${5 + Math.random() * 8}px`;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 950);
+      }
+    }
+
+    function unlockAudio(){
+      if(!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if(audioCtx.state === "suspended") audioCtx.resume();
+    }
+
+    function tone(freq, duration = .08, type = "sine", gainValue = .06, startOffset = 0){
+      if(!audioCtx) return;
+      const now = audioCtx.currentTime + startOffset;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(gainValue, now + .012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + duration + .02);
+    }
+
+    function noise(duration = .12, gainValue = .05){
+      if(!audioCtx) return;
+      const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * duration, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for(let i=0;i<data.length;i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+      const source = audioCtx.createBufferSource();
+      const gain = audioCtx.createGain();
+      gain.gain.value = gainValue;
+      source.buffer = buffer;
+      source.connect(gain);
+      gain.connect(audioCtx.destination);
+      source.start();
+    }
+
+    function playSelect(){
+      const scale = [523,587,659,784,880,988,1175];
+      const f = scale[selected.length % scale.length];
+      tone(f,.052,"triangle",.035,0);
+      tone(f*1.5,.045,"sine",.018,.025);
+    }
+
+    function playError(){
+      tone(190,.11,"sawtooth",.045,0);
+      tone(145,.16,"sawtooth",.04,.07);
+      tone(92,.19,"square",.028,.16);
+    }
+
+    function playMatch(n){
+      noise(.075,.028);
+      const base = n >= 5 ? 660 : 523;
+      tone(base,.07,"triangle",.052,0);
+      tone(base*1.25,.075,"triangle",.048,.055);
+      tone(base*1.5,.09,"sine",.043,.115);
+      tone(base*2,.12,"triangle",.035,.19);
+    }
+
+    function playChain(n){
+      noise(.13,.04);
+      tone(740,.06,"triangle",.038,0);
+      tone(932,.065,"triangle",.04,.055);
+      tone(1175 + n * 8,.09,"sine",.035,.12);
+      tone(1568,.12,"triangle",.026,.2);
+    }
+
+    function playDrop(){
+      tone(330,.055,"sine",.018,0);
+      tone(392,.055,"sine",.016,.08);
+      tone(494,.065,"sine",.014,.17);
+    }
+
+    function playArmBomb(){
+      tone(220,.07,"square",.035,0);
+      tone(440,.08,"triangle",.03,.08);
+      tone(880,.08,"sine",.022,.16);
+    }
+
+    function playShuffle(){
+      noise(.10,.03);
+      tone(392,.07,"triangle",.028,0);
+      tone(523,.07,"triangle",.03,.07);
+      tone(659,.085,"sine",.026,.14);
+      tone(988,.11,"triangle",.022,.23);
+    }
+
+    function playBomb(){
+      noise(.22,.075);
+      tone(98,.19,"sawtooth",.06,0);
+      tone(196,.13,"square",.045,.04);
+      tone(784,.08,"triangle",.035,.11);
+      tone(1046,.11,"sine",.026,.18);
+    }
+
+    closeRulesBtn.addEventListener("click", () => {
+      unlockAudio();
+      modal.classList.add("hidden");
+    });
+    bombBtn.addEventListener("click", () => {
+      if(locked || bombsLeft <= 0 || !GAME_DATA.length) return;
+      unlockAudio();
+      bombArmed = !bombArmed;
+      updateStats();
+      playArmBomb();
+      showToast(bombArmed ? "Bombe bereit" : "Bombe aus");
+    });
+
+    helpBtn.addEventListener("click", () => modal.classList.remove("hidden"));
+    semesterBtn.addEventListener("click", async () => {
+      if(locked || !GAME_DATA.length) return;
+      unlockAudio();
+      locked = true;
+      await shuffleWithNewCategories();
+      locked = false;
+    });
+    newGameBtn.addEventListener("click", () => {
+      unlockAudio();
+      newGame();
+      if(GAME_DATA.length) showToast("Neustart");
+    });
+
+    populateSemesterButtons();
+    semesterStatEl.textContent = "6 aktiv";
+    updateStats();
+    newGame();
+  </script>
+</body>
+</html>
